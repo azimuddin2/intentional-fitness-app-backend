@@ -422,12 +422,6 @@ const googleLogin = async (payload: {
     if (existingUser.status === 'blocked') {
       throw new AppError(httpStatus.FORBIDDEN, 'User is blocked');
     }
-    if (existingUser.loginWith !== Login_With.google) {
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        `Account already registered with ${existingUser.loginWith}`,
-      );
-    }
 
     /* ================= UPDATE FCM TOKEN ================= */
     if (payload?.fcmToken) {
@@ -524,12 +518,6 @@ const appleLogin = async (payload: {
     }
     if (existingUser.status === 'blocked') {
       throw new AppError(httpStatus.FORBIDDEN, 'User is blocked');
-    }
-    if (existingUser.loginWith !== Login_With.apple) {
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        `Account already registered with ${existingUser.loginWith}`,
-      );
     }
 
     /* ================= UPDATE FCM TOKEN ================= */
