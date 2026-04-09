@@ -13,7 +13,7 @@ async function main() {
       chalk.green('✅ Connection to database is successfully established!'),
     );
 
-    server = app.listen(config.port, () => {
+    server = app.listen(Number(config.port), config.ip as string, () => {
       console.log(chalk.blue(`🚀 Server is running on port: ${config.port}`));
     });
   } catch (error) {
