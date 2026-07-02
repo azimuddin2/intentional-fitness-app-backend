@@ -6,24 +6,10 @@ import { TermsRoutes } from '../modules/terms/terms.route';
 import { PrivacyRoutes } from '../modules/privacy/privacy.route';
 import { AboutRoutes } from '../modules/about/about.route';
 import { SupportRoutes } from '../modules/support/support.route';
-import { PaymentRoutes } from '../modules/payment/payment.route';
 import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 import { NotificationRoutes } from '../modules/notification/notification.route';
 import { NewsRoutes } from '../modules/news/news.route';
 import { PollRoutes } from '../modules/poll/poll.route';
-import { DonationsCategoryRoutes } from '../modules/monthlyDonationCategory/monthlyDonationCategory.route';
-import { DonationsSubcategoryRoutes } from '../modules/monthlyDonationSubcategory/monthlyDonationSubcategory.route';
-import { SadaqahJariyahRoutes } from '../modules/sadaqahJariyah/sadaqahJariyah.route';
-import { TopAppealsRoutes } from '../modules/topAppeals/topAppeals.route';
-import { TopAppealsCategoryRoutes } from '../modules/topAppealsCategory/topAppealsCategory.route';
-import { MonthlyDonationsRoutes } from '../modules/monthlyDonations/monthlyDonations.route';
-import { SadaqahJariyahDonationsRoutes } from '../modules/sadaqahJariyahDonations/sadaqahJariyahDonations.route';
-import { TopAppealsDonationsRoutes } from '../modules/topAppealsDonations/topAppealsDonations.route';
-import { CartRoutes } from '../modules/cart/cart.route';
-import { OrderRoutes } from '../modules/order/order.route';
-import { PromotionRoutes } from '../modules/promotion/promotion.route';
-import { DailySadaqahRoutes } from '../modules/dailySadaqah/dailySadaqah.route';
-import { DailySadaqahDonationsRoutes } from '../modules/dailySadaqahDonations/dailySadaqahDonations.route';
 
 const router = Router();
 
@@ -65,68 +51,12 @@ const moduleRoutes = [
     route: PollRoutes,
   },
   {
-    path: '/daily-sadaqah',
-    route: DailySadaqahRoutes,
-  },
-  {
-    path: '/daily-sadaqah-donations',
-    route: DailySadaqahDonationsRoutes,
-  },
-  {
-    path: '/monthly-donations-categories',
-    route: DonationsCategoryRoutes,
-  },
-  {
-    path: '/monthly-donations-subcategories',
-    route: DonationsSubcategoryRoutes,
-  },
-  {
-    path: '/monthly-donations',
-    route: MonthlyDonationsRoutes,
-  },
-  {
-    path: '/sadaqah-jariyah',
-    route: SadaqahJariyahRoutes,
-  },
-  {
-    path: '/sadaqah-jariyah-donations',
-    route: SadaqahJariyahDonationsRoutes,
-  },
-  {
-    path: '/top-appeals-categories',
-    route: TopAppealsCategoryRoutes,
-  },
-  {
-    path: '/top-appeals',
-    route: TopAppealsRoutes,
-  },
-  {
-    path: '/top-appeals-donations',
-    route: TopAppealsDonationsRoutes,
-  },
-  {
-    path: '/carts',
-    route: CartRoutes,
-  },
-  {
-    path: '/orders',
-    route: OrderRoutes,
-  },
-  {
-    path: '/payments',
-    route: PaymentRoutes,
-  },
-  {
     path: '/dashboard',
     route: DashboardRoutes,
   },
   {
     path: '/notifications',
     route: NotificationRoutes,
-  },
-  {
-    path: '/promotions',
-    route: PromotionRoutes,
   },
 ];
 
