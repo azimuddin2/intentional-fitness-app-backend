@@ -19,7 +19,7 @@ const verifyOtp = async (token: string, otp: TVerifyOtp) => {
   const { email } = decoded;
 
   const user = await User.findOne({ email: email }).select(
-    'fullName email verification isVerified role',
+    'name email verification isVerified role',
   );
 
   if (!user) {
@@ -58,12 +58,11 @@ const verifyOtp = async (token: string, otp: TVerifyOtp) => {
       },
     },
     { new: true },
-  ).select('_id fullName email role isVerified status');
+  ).select('_id name email role isVerified status');
 
-  // create token and sent to the client
   const jwtPayload: TJwtPayload = {
     userId: user._id,
-    name: user.fullName,
+    name: user.name,
     email: user.email,
     role: user.role,
   };
@@ -111,7 +110,7 @@ const resendOtp = async (email: string) => {
 
   const jwtPayload: TJwtPayload = {
     userId: user._id,
-    name: user.fullName,
+    name: user.name,
     email: user.email,
     role: user.role,
   };
@@ -124,60 +123,80 @@ const resendOtp = async (email: string) => {
 
   await sendEmail(
     user.email,
-    'Your OTP Code for Email Verification',
+    'Your New OTP Code for Email Verification',
     `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Email Verification OTP</title>
-      </head>
-      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 30px 0;">
-          <tr>
-            <td align="center">
-              <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-                <tr>
-                  <td align="center" style="padding-bottom: 20px;">
-                    <h2 style="color: #EA6919; margin: 0;">Email Verification</h2>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="font-size: 16px; color: #333333; padding-bottom: 20px; text-align: center;">
-                    <p style="margin: 0;">Hello <strong>${user.fullName}</strong>,</p>
-                    <p style="margin: 5px 0 0;">Use the OTP below to verify your email and complete your registration:</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding: 20px 0;">
-                    <div style="display: inline-block; padding: 15px 30px; font-size: 24px; font-weight: bold; color: #ffffff; background-color: #EA6919; border-radius: 6px; letter-spacing: 2px;">
-                      ${otp}
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="font-size: 14px; color: #666666; text-align: center; padding-bottom: 20px;">
-                    <p style="margin: 0;">This OTP is valid for <strong>5 minutes</strong> (expires at <strong>${expiresAt.toLocaleTimeString()}</strong>).</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="font-size: 13px; color: #999999; text-align: center;">
-                    <p style="margin: 0;">If you did not request this OTP, please ignore this email. No action is required.</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding-top: 30px; text-align: center;">
-                    <p style="font-size: 12px; color: #cccccc; margin: 0;">&copy; ${new Date().getFullYear()} Your Company Name. All rights reserved.</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-      `,
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Resend OTP Verification</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f6;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f6; padding: 40px 0;">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+              <!-- Header -->
+              <tr>
+                <td align="center" style="background-color: #1F5C5C; padding: 30px 40px;">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
+                    New Verification Code
+                  </h1>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding: 40px;">
+                  <p style="font-size: 15px; color: #333333; margin: 0 0 8px 0; text-align: center;">
+                    Hello <strong>${user.name}</strong>,
+                  </p>
+                  <p style="font-size: 15px; color: #666666; margin: 0 0 30px 0; text-align: center;">
+                    As requested, here is your new OTP code. Your previous code is no longer valid.
+                  </p>
+
+                  <!-- OTP Box -->
+                  <table align="center" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="background-color: #1F5C5C; padding: 16px 40px; border-radius: 8px;">
+                        <span style="font-size: 30px; font-weight: 700; letter-spacing: 8px; color: #ffffff;">
+                          ${otp}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="font-size: 14px; color: #666666; text-align: center; margin: 24px 0 0 0;">
+                    This code is valid for <strong style="color: #1F5C5C;">5 minutes</strong>
+                    (expires at <strong style="color: #1F5C5C;">${expiresAt.toLocaleTimeString()}</strong>)
+                  </p>
+
+                  <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;" />
+
+                  <p style="font-size: 13px; color: #999999; text-align: center; margin: 0;">
+                    If you did not request this code, please ignore this email or contact support.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td align="center" style="background-color: #f9fafa; padding: 20px 40px;">
+                  <p style="font-size: 12px; color: #b0b0b0; margin: 0;">
+                    &copy; ${new Date().getFullYear()} Intentional Fitness. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    `,
   );
 
   return { token };

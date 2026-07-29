@@ -1,7 +1,7 @@
 import { Model, ObjectId } from 'mongoose';
 import { USER_ROLE } from './user.constant';
 
-export type TRole = 'user' | 'admin';
+export type TRole = 'user' | 'trainer' | 'admin';
 
 export type TStatus = 'ongoing' | 'confirmed' | 'blocked';
 
@@ -9,16 +9,15 @@ export type TGender = 'male' | 'female' | 'other';
 
 export type TUser = {
   _id: ObjectId;
-  conversationId?: string | null;
-  fullName: string;
+  name: string;
   email: string;
   phone: string;
-  address: string;
+
   image: string | null;
   gender: TGender;
-  country: string;
 
   password: string;
+  confirmPassword: string;
   needsPasswordChange: boolean;
   passwordChangeAt?: Date;
 
@@ -37,8 +36,6 @@ export type TUser = {
   fcmToken?: string;
   notifications: boolean;
   isDeleted: boolean;
-
-  stripeCustomerId?: string;
 };
 
 export interface UserModel extends Model<TUser> {

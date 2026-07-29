@@ -6,11 +6,22 @@ const verifyOtpValidationSchema = z.object({
       .string({
         required_error: 'OTP is required',
       })
-      .min(6, 'OTP must be at least 6 digits')
+      .min(4, 'OTP must be at least 4 digits')
       .regex(/^\d+$/, 'OTP must contain only numbers'),
+  }),
+});
+
+const resendOtpValidationSchema = z.object({
+  body: z.object({
+    email: z
+      .string({
+        required_error: 'Email is required',
+      })
+      .email('Invalid email address'),
   }),
 });
 
 export const OtpValidations = {
   verifyOtpValidationSchema,
+  resendOtpValidationSchema,
 };

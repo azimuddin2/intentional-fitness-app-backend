@@ -3,76 +3,81 @@ import { Gender, UserRole, UserStatus } from './user.constant';
 
 // ✅ SignUp (Create) User Validation Schema
 const createUserValidationSchema = z.object({
-  body: z.object({
-    fullName: z
-      .string({
-        required_error: 'Full Name is required',
-        invalid_type_error: 'Full name must be a string',
-      })
-      .min(3, 'Full name must be at least 3 characters')
-      .max(50, 'Full name cannot exceed 50 characters'),
+  body: z
+    .object({
+      name: z
+        .string({
+          required_error: 'Name is required',
+          invalid_type_error: 'Name must be a string',
+        })
+        .min(3, 'Full name must be at least 3 characters')
+        .max(20, 'Full name cannot exceed 20 characters'),
 
-    email: z
-      .string({
-        required_error: 'Email is required',
-      })
-      .email('Invalid email address'),
+      email: z
+        .string({
+          required_error: 'Email is required',
+        })
+        .email('Invalid email address'),
 
-    phone: z
-      .string()
-      .regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number')
-      .optional(),
+      phone: z
+        .string({
+          required_error: 'Mobile number is required',
+        })
+        .regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number'),
 
-    password: z
-      .string({
-        required_error: 'Password is required',
-      })
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(
-        /[!@#$%^&*]/,
-        'Password must contain at least one special character',
-      ),
+      password: z
+        .string({
+          required_error: 'Password is required',
+        })
+        .min(8, 'Password must be at least 8 characters')
+        .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+        .regex(/[0-9]/, 'Password must contain at least one number')
+        .regex(
+          /[!@#$%^&*]/,
+          'Password must contain at least one special character',
+        ),
 
-    address: z
-      .string({
-        required_error: 'address is required',
-      })
-      .min(3, 'Street address must be at least 3 characters')
-      .optional(),
+      confirmPassword: z
+        .string({
+          required_error: 'Confirm password is required',
+        })
+        .min(8, 'Confirm password must be at least 8 characters'),
 
-    gender: z.enum([...Gender] as [string, ...string[]]).optional(),
-    image: z.string().optional(),
+      gender: z.enum([...Gender] as [string, ...string[]]).optional(),
+      image: z.string().optional(),
 
-    role: z.enum([...UserRole] as [string, ...string[]]).default('user'),
+      role: z.enum([...UserRole] as [string, ...string[]]).default('user'),
 
-    status: z.enum([...UserStatus] as [string, ...string[]]).default('ongoing'),
+      status: z
+        .enum([...UserStatus] as [string, ...string[]])
+        .default('ongoing'),
 
-    isDeleted: z.boolean().optional().default(false),
+      isDeleted: z.boolean().optional().default(false),
 
-    isVerified: z.boolean().optional().default(false),
+      isVerified: z.boolean().optional().default(false),
 
-    verification: z
-      .object({
-        otp: z.string().optional(),
-        expiresAt: z.date().optional(),
-        status: z.boolean().optional(),
-      })
-      .optional(),
-
-    stripeCustomerId: z.string().optional(),
-  }),
+      verification: z
+        .object({
+          otp: z.string().optional(),
+          expiresAt: z.date().optional(),
+          status: z.boolean().optional(),
+        })
+        .optional(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: 'Password and Confirm Password do not match',
+      path: ['confirmPassword'],
+    }),
 });
 
 // ✅ Update User Validation Schema
 const updateUserValidationSchema = z.object({
   body: z.object({
-    fullName: z
+    name: z
       .string()
-      .min(3, 'Full name must be at least 3 characters')
-      .max(50, 'Full name cannot exceed 50 characters')
+      .min(3, 'Name must be at least 3 characters')
+      .max(20, 'Name cannot exceed 20 characters')
       .optional(),
 
     phone: z
@@ -81,13 +86,6 @@ const updateUserValidationSchema = z.object({
       .optional(),
 
     email: z.string().email('Invalid email address').optional(),
-
-    address: z
-      .string({
-        required_error: 'address is required',
-      })
-      .min(3, 'Street address must be at least 3 characters')
-      .optional(),
 
     image: z.string().optional(),
     gender: z.enum([...Gender] as [string, ...string[]]).optional(),

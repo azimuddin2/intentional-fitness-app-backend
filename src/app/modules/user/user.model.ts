@@ -6,16 +6,12 @@ import { Gender, Login_With, UserRole, UserStatus } from './user.constant';
 
 const userSchema = new Schema<TUser, UserModel>(
   {
-    conversationId: {
+    name: {
       type: String,
-      default: null,
-    },
-    fullName: {
-      type: String,
-      required: [true, 'Full name is required'],
+      required: [true, 'Name is required'],
       trim: true,
-      minlength: [3, 'Full name must be at least 3 characters'],
-      maxlength: [50, 'Full name can not exceed 50 characters'],
+      minlength: [3, 'Name must be at least 3 characters'],
+      maxlength: [50, 'Name can not exceed 20 characters'],
     },
     email: {
       type: String,
@@ -38,29 +34,25 @@ const userSchema = new Schema<TUser, UserModel>(
       default: null,
       validate: {
         validator: function (v) {
-          if (!v) return true; // allow empty
+          if (!v) return true;
           return /^\+[1-9]\d{7,14}$/.test(v);
         },
         message: (props) =>
           `${props.value} is not a valid international phone number`,
       },
     },
-    address: {
-      type: String,
-      required: false,
-      trim: true,
-      default: null,
-    },
-    country: {
-      type: String,
-      required: false,
-      trim: true,
-      default: null,
-    },
+
     password: {
       type: String,
-      required: [false, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters'],
+      required: [true, 'Password is required'],
+      trim: true,
+      minlength: [8, 'Password can be minimum 8 characters'],
+    },
+    confirmPassword: {
+      type: String,
+      required: [true, 'Password is required'],
+      trim: true,
+      minlength: [8, 'Password can be minimum 8 characters'],
     },
     needsPasswordChange: {
       type: Boolean,
@@ -68,6 +60,12 @@ const userSchema = new Schema<TUser, UserModel>(
     },
     passwordChangeAt: {
       type: Date,
+    },
+
+    image: {
+      type: String,
+      trim: true,
+      default: null,
     },
     gender: {
       type: String,
@@ -79,6 +77,7 @@ const userSchema = new Schema<TUser, UserModel>(
       required: false,
       default: null,
     },
+
     role: {
       type: String,
       enum: {
@@ -95,15 +94,7 @@ const userSchema = new Schema<TUser, UserModel>(
       },
       default: 'ongoing',
     },
-    image: {
-      type: String,
-      trim: true,
-      default: null,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
+
     isVerified: {
       type: Boolean,
       default: false,
@@ -136,9 +127,9 @@ const userSchema = new Schema<TUser, UserModel>(
       type: Boolean,
       default: true,
     },
-    stripeCustomerId: {
-      type: String,
-      default: null,
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -146,44 +137,58 @@ const userSchema = new Schema<TUser, UserModel>(
   },
 );
 
-// ✅ Password hash before saving
 userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(
-      this.password,
-      Number(config.bcrypt_salt_rounds),
-    );
-  }
+  const user = this;
+
+  user.password = await bcrypt.hash(
+    user.password,
+    Number(config.bcrypt_salt_rounds),
+  );
+
+  user.confirmPassword = await bcrypt.hash(
+    user.confirmPassword,
+    Number(config.bcrypt_salt_rounds),
+  );
+
   next();
 });
 
-// ✅ Clear sensitive data after saving
+// set '' after saving password
 userSchema.post('save', function (doc, next) {
   doc.password = '';
+  doc.confirmPassword = '';
   next();
 });
 
-// ✅ Static methods
 userSchema.statics.isUserExistsByEmail = async function (email: string) {
   return await User.findOne({ email }).select('+password');
 };
 
+userSchema.statics.isJWTIssuedBeforePasswordChanged = async function (
+  passwordChangedTimestamp: Date,
+  jwtIssuedTimestamp: number,
+) {
+  const passwordChangedTime =
+    new Date(passwordChangedTimestamp).getTime() / 100;
+
+  return passwordChangedTime > jwtIssuedTimestamp;
+};
+
 userSchema.statics.isPasswordMatched = async function (
-  plainTextPassword: string,
-  hashPassword: string,
+  plainTextPassword,
+  hashPassword,
 ) {
   return await bcrypt.compare(plainTextPassword, hashPassword);
 };
 
-userSchema.statics.isJWTIssuedBeforePasswordChanged = function (
+userSchema.statics.isJWTIssuedBeforePasswordChanged = async function (
   passwordChangedTimestamp: Date,
   jwtIssuedTimestamp: number,
 ) {
-  if (!passwordChangedTimestamp) return false;
   const passwordChangedTime =
-    new Date(passwordChangedTimestamp).getTime() / 1000; // convert to seconds
+    new Date(passwordChangedTimestamp).getTime() / 100;
+
   return passwordChangedTime > jwtIssuedTimestamp;
 };
 
-// ✅ Export model
 export const User = model<TUser, UserModel>('User', userSchema);

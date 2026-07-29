@@ -26,7 +26,7 @@ const signupUserIntoDB = async (payload: TUser) => {
   // 3. Prepare data with verification details
   const userData: Partial<TUser> = {
     ...payload,
-    role: 'user',
+    role: 'trainer',
     isVerified: false,
     verification: {
       otp,
@@ -41,7 +41,7 @@ const signupUserIntoDB = async (payload: TUser) => {
   // 5. Create JWT token (optional for next step)
   const jwtPayload: TJwtPayload = {
     userId: result._id,
-    name: result?.fullName,
+    name: result?.name,
     email: result?.email,
     role: result?.role,
   };
@@ -49,7 +49,7 @@ const signupUserIntoDB = async (payload: TUser) => {
   const accessToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    '7m',
+    '30m',
   );
 
   // 6. Send OTP email
@@ -57,57 +57,77 @@ const signupUserIntoDB = async (payload: TUser) => {
     result.email,
     'Your OTP Code',
     `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OTP Verification</title>
-  </head>
-  <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 30px 0;">
-      <tr>
-        <td align="center">
-          <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-            <tr>
-              <td align="center" style="padding-bottom: 20px;">
-                <h2 style="color: #EA6919; margin: 0;">Verify Your Email</h2>
-              </td>
-            </tr>
-            <tr>
-              <td style="font-size: 16px; color: #333333; padding-bottom: 20px; text-align: center;">
-                <p style="margin: 0;">Use the OTP below to verify your email address and complete your registration:</p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding: 20px 0;">
-                <div style="display: inline-block; padding: 15px 30px; font-size: 24px; font-weight: bold; color: #ffffff; background-color: #EA6919; border-radius: 6px; letter-spacing: 2px;">
-                  ${otp}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td style="font-size: 14px; color: #666666; text-align: center; padding-bottom: 20px;">
-                <p style="margin: 0;">This code is valid until <strong>${expiresAt.toLocaleString()}</strong>.</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="font-size: 13px; color: #999999; text-align: center;">
-                <p style="margin: 0;">If you did not request this code, you can safely ignore this email.</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top: 30px; text-align: center;">
-                <p style="font-size: 12px; color: #cccccc; margin: 0;">&copy; ${new Date().getFullYear()} Your Company Name. All rights reserved.</p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-  </html>
-  `,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTP Verification</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f6; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background-color: #1F5C5C; padding: 30px 40px;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
+                Verify Your Email
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="font-size: 15px; color: #333333; margin: 0 0 8px 0; text-align: center;">
+                We have just sent you a code to verify your email
+              </p>
+              <p style="font-size: 15px; color: #1F5C5C; font-weight: 600; margin: 0 0 30px 0; text-align: center;">
+                ${result.email}
+              </p>
+
+              <!-- OTP Box -->
+              <table align="center" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="background-color: #1F5C5C; padding: 16px 40px; border-radius: 8px;">
+                    <span style="font-size: 30px; font-weight: 700; letter-spacing: 8px; color: #ffffff;">
+                      ${otp}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 14px; color: #666666; text-align: center; margin: 24px 0 0 0;">
+                This code is valid until <strong style="color: #1F5C5C;">${expiresAt.toLocaleString()}</strong>
+              </p>
+
+              <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;" />
+
+              <p style="font-size: 13px; color: #999999; text-align: center; margin: 0;">
+                If you did not request this code, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="background-color: #f9fafa; padding: 20px 40px;">
+              <p style="font-size: 12px; color: #b0b0b0; margin: 0;">
+  &copy; ${new Date().getFullYear()} Intentional Fitness. All rights reserved.
+</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`,
   );
 
   return { accessToken };
@@ -117,7 +137,7 @@ const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   const baseQuery = {
     ...query,
     isDeleted: false,
-    role: { $nin: ['admin'] }, // ✅ exclude admins
+    role: { $nin: ['admin'] },
   };
 
   const queryBuilder = new QueryBuilder(User.find(), baseQuery)
@@ -247,7 +267,7 @@ const updateUserPictureIntoDB = async (
   session.startTransaction();
 
   try {
-    const payload: Record<string, any> = {}; // ✅ initialize payload
+    const payload: Record<string, any> = {};
 
     // 📸 Step 2: Handle image upload
     if (file) {
@@ -271,7 +291,7 @@ const updateUserPictureIntoDB = async (
       existingUser._id,
       { $set: payload },
       { new: true, runValidators: true, session },
-    ).select('_id fullName email image');
+    ).select('_id name email image');
 
     if (!updatedUser) {
       throw new AppError(400, 'Failed to update user');
@@ -314,16 +334,88 @@ const deleteUserAccountFromDB = async (userId: string) => {
 
   // 3️⃣ Send notification email
   const emailHtml = `
-    <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-      <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px; text-align: center;">
-        <h2 style="color: #FF4D4F;">Account Deleted</h2>
-        <p>Hi ${deletedUser.fullName || 'User'},</p>
-        <p>Your account has been successfully deleted as per your request or by admin action.</p>
-        <p>If you did not request this action, please contact our support immediately.</p>
-        <p style="margin-top: 30px; font-size: 12px; color: #999999;">&copy; ${new Date().getFullYear()} Your Company Name. All rights reserved.</p>
-      </div>
-    </div>
-  `;
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Deleted</title>
+  </head>
+  <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f6;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f6; padding: 40px 0;">
+      <tr>
+        <td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+            <!-- Header -->
+            <tr>
+              <td align="center" style="background-color: #D93025; padding: 30px 40px;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
+                  Account Deleted
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 40px;">
+                <p style="font-size: 15px; color: #333333; margin: 0 0 8px 0;">
+                  Hi <strong>${deletedUser.name || 'User'}</strong>,
+                </p>
+                <p style="font-size: 15px; color: #333333; line-height: 1.6; margin: 0 0 20px 0;">
+                  This is to confirm that your account associated with
+                  <strong style="color: #1F5C5C;">${deletedUser.email}</strong>
+                  has been successfully deleted, either as per your request or by admin action.
+                </p>
+
+                <!-- Warning box -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFF4F4; border-left: 4px solid #D93025; border-radius: 6px; margin: 20px 0;">
+                  <tr>
+                    <td style="padding: 16px 20px;">
+                      <p style="font-size: 14px; color: #B02A2A; margin: 0; line-height: 1.5;">
+                        If you did not request this action, please contact our support team
+                        immediately — your data may still be recoverable within a limited period.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Support CTA -->
+                <table align="center" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                  <tr>
+                    <td align="center" style="background-color: #1F5C5C; border-radius: 6px;">
+                      <a href="mailto:support@intentionalfitness.com"
+                         style="display: inline-block; padding: 12px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none;">
+                        Contact Support
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;" />
+
+                <p style="font-size: 13px; color: #999999; text-align: center; margin: 0;">
+                  We're sorry to see you go. Thank you for being a part of our community.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="background-color: #f9fafa; padding: 20px 40px;">
+                <p style="font-size: 12px; color: #b0b0b0; margin: 0;">
+                  &copy; ${new Date().getFullYear()} Intentional Fitness. All rights reserved.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>
+`;
 
   await sendEmail(deletedUser.email, 'Account Deleted', emailHtml);
 

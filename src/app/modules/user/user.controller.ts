@@ -113,7 +113,7 @@ const deleteUserAccount = catchAsync(async (req: Request, res: Response) => {
 const updateNotificationSettings = catchAsync(
   async (req: Request, res: Response) => {
     const { email } = req.user;
-    const { notifications } = req.body; // ✅ extract boolean
+    const { notifications } = req.body;
 
     const result = await UserServices.updateNotificationSettingsIntoDB(
       email,

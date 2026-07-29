@@ -17,13 +17,21 @@ router.post(
 
 router.get('/', auth('admin'), UserControllers.getAllUsers);
 
-router.get('/profile', auth('user', 'admin'), UserControllers.getUserProfile);
+router.get(
+  '/profile',
+  auth('user', 'trainer', 'admin'),
+  UserControllers.getUserProfile,
+);
 
-router.get('/:id', auth('admin', 'user'), UserControllers.getUserById);
+router.get(
+  '/:id',
+  auth('admin', 'user', 'trainer'),
+  UserControllers.getUserById,
+);
 
 router.patch(
   '/profile',
-  auth('admin', 'user'),
+  auth('user', 'trainer', 'admin'),
   upload.single('image'),
   parseData(),
   validateRequest(UserValidations.updateUserValidationSchema),
@@ -32,7 +40,7 @@ router.patch(
 
 router.patch(
   '/profile/picture',
-  auth('admin', 'user'),
+  auth('user', 'trainer', 'admin'),
   upload.single('profile'),
   UserControllers.updateUserPicture,
 );
@@ -44,11 +52,11 @@ router.put(
   UserControllers.changeStatus,
 );
 
-router.delete('/', auth('admin', 'user'), UserControllers.deleteUserAccount);
+router.delete('/', auth('trainer', 'user'), UserControllers.deleteUserAccount);
 
 router.patch(
   '/update-notifications',
-  auth('admin', 'user'),
+  auth('user', 'trainer', 'admin'),
   validateRequest(UserValidations.notificationSettingsValidationSchema),
   UserControllers.updateNotificationSettings,
 );
