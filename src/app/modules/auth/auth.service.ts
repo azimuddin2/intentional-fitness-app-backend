@@ -18,7 +18,7 @@ import { sendNotification } from '../notification/notification.utils';
 import httpStatus from 'http-status';
 import { Login_With, USER_ROLE } from '../user/user.constant';
 import { OtpServices } from '../otp/otp.service';
-import { TUser } from '../user/user.interface';
+import { TRole, TUser } from '../user/user.interface';
 
 const loginUser = async (payload: TLoginUser) => {
   const user = await User.findOne({ email: payload.email });
@@ -27,24 +27,35 @@ const loginUser = async (payload: TLoginUser) => {
     throw new AppError(404, 'This user is not found!');
   }
 
-  if (user?.isDeleted === true) {
+  if (user.isDeleted === true) {
     throw new AppError(403, 'This user is deleted!');
   }
 
-  if (user?.status === 'blocked') {
+  if (user.status === 'blocked') {
     throw new AppError(403, 'This user is blocked!');
   }
 
-  // checking if the password is correct
   const isPasswordMatched = await User.isPasswordMatched(
     payload?.password,
     user?.password,
   );
   if (!isPasswordMatched) {
-    throw new AppError(403, 'Password do not matched!');
+    throw new AppError(401, 'Password does not match!');
   }
 
-  // ✅ Save FCM token if provided
+  // 🔴 User not verified → resend OTP, don't generate any token
+  if (!user.isVerified) {
+    await OtpServices.resendOtp(user.email);
+
+    return {
+      success: false,
+      message: `Hi ${user.name}, your account is not verified yet. We've just sent an OTP to your email ${user.email}. Please check your inbox and enter the code to verify your account.`,
+      requiresVerification: true,
+      isVerified: user.isVerified,
+      email: user.email,
+    };
+  }
+
   let updatedUser: TUser = user;
 
   if (payload.fcmToken) {
@@ -55,12 +66,11 @@ const loginUser = async (payload: TLoginUser) => {
     )) as TUser;
   }
 
-  // create token and sent to the client
   const jwtPayload: TJwtPayload = {
     userId: user._id.toString(),
-    name: user?.name,
-    email: user?.email,
-    role: user?.role,
+    name: user.name,
+    email: user.email,
+    role: user.role,
   };
 
   const accessToken = createToken(
@@ -75,37 +85,21 @@ const loginUser = async (payload: TLoginUser) => {
     config.jwt_refresh_expires_in as string,
   );
 
-  // 🔴 User not verified → resend OTP and inform user
-  if (!user.isVerified) {
-    await OtpServices.resendOtp(user.email);
-
-    return {
-      success: false,
-      message: `Hi ${user.name}, your account is not verified yet. We've just sent an OTP to your email ${user.email}. Please check your inbox and enter the code to verify your account.`,
-      requiresVerification: true,
-      isVerified: user.isVerified,
-      accessToken,
-      refreshToken,
-    };
-  } else {
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        _id: user._id,
-        fullName: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        status: user.status,
-        gender: user.gender,
-        image: user.image,
-        isVerified: user.isVerified,
-        needsPasswordChange: user.needsPasswordChange,
-        notifications: user.notifications,
-      },
-    };
-  }
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      role: updatedUser.role,
+      status: updatedUser.status,
+      gender: updatedUser.gender,
+      image: updatedUser.image,
+      isVerified: updatedUser.isVerified,
+    },
+  };
 };
 
 const refreshToken = async (token: string) => {
@@ -224,7 +218,7 @@ const forgotPassword = async (email: string) => {
   const accessToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    '3m',
+    '5m',
   );
 
   const otp = generateOtp();
@@ -245,57 +239,75 @@ const forgotPassword = async (email: string) => {
     email,
     'Your OTP for Password Reset',
     `
-     <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reset Your Password</title>
-</head>
-<body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4; padding:30px 0;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; padding:40px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.05); max-width:600px; width:100%;">
-          <tr>
-            <td align="center" style="padding-bottom:20px;">
-              <h2 style="color:#EA6919; margin:0;">Reset Your Password</h2>
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size:16px; color:#333333; padding-bottom:20px; text-align:center;">
-              <p style="margin:0;">Use the OTP below to reset your password. Do not share this code with anyone.</p>
-            </td>
-          </tr>
-          <tr>
-            <td align="center" style="padding:20px 0;">
-              <div style="display:inline-block; padding:15px 30px; font-size:24px; font-weight:bold; color:#ffffff; background-color:#; border-radius:6px; letter-spacing:2px;">
-                ${otp}
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size:14px; color:#666666; text-align:center; padding-bottom:20px;">
-              <p style="margin:0;">This OTP is valid for <strong>${otpExpiryMinutes} minutes</strong> (expires at <strong>${expiresAt.toLocaleTimeString()}</strong>).</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="font-size:13px; color:#999999; text-align:center;">
-              <p style="margin:0;">If you did not request a password reset, you can safely ignore this email.</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding-top:30px; text-align:center;">
-              <p style="font-size:12px; color:#cccccc; margin:0;">&copy; ${new Date().getFullYear()} Your Company Name. All rights reserved.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `,
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Your Password</title>
+  </head>
+  <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f6;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f6; padding: 40px 0;">
+      <tr>
+        <td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+            <!-- Header -->
+            <tr>
+              <td align="center" style="background-color: #1F5C5C; padding: 30px 40px;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
+                  Reset your password
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 40px;">
+                <p style="font-size: 15px; color: #666666; margin: 0 0 30px 0; text-align: center;">
+                  Use the OTP below to reset your password. Do not share this code with anyone.
+                </p>
+
+                <!-- OTP Box -->
+                <table align="center" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center" style="background-color: #1F5C5C; padding: 16px 40px; border-radius: 8px;">
+                      <span style="font-size: 30px; font-weight: 700; letter-spacing: 8px; color: #ffffff;">
+                        ${otp}
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="font-size: 14px; color: #666666; text-align: center; margin: 24px 0 0 0;">
+                  This OTP is valid for <strong style="color: #1F5C5C;">${otpExpiryMinutes} minutes</strong>
+                  (expires at <strong style="color: #1F5C5C;">${expiresAt.toLocaleTimeString()}</strong>)
+                </p>
+
+                <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;" />
+
+                <p style="font-size: 13px; color: #999999; text-align: center; margin: 0;">
+                  If you did not request a password reset, you can safely ignore this email.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="background-color: #f9fafa; padding: 20px 40px;">
+                <p style="font-size: 12px; color: #b0b0b0; margin: 0;">
+                  &copy; ${new Date().getFullYear()} Your Company Name. All rights reserved.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>
+  `,
   );
 
   return { email, accessToken };
@@ -391,10 +403,10 @@ const logoutUser = async (userId: string) => {
   return null;
 };
 
-// SOCIAL LOGIN METHODS GOOGLE & APPLE
 const googleLogin = async (payload: {
   email: string;
   fullName: string;
+  role: TRole;
   picture?: string;
   fcmToken?: string;
 }) => {
@@ -402,7 +414,7 @@ const googleLogin = async (payload: {
     throw new AppError(httpStatus.BAD_REQUEST, 'Email and name are required');
   }
 
-  /* ================= FCM TOKEN VALIDATION ================= */
+  /* ____________________ FCM TOKEN VALIDATION ____________________ */
   if (payload?.fcmToken) {
     const isValid = await isValidFcmToken(payload.fcmToken);
     if (!isValid) {
@@ -410,10 +422,12 @@ const googleLogin = async (payload: {
     }
   }
 
-  /* ================= CHECK USER EXISTS ================= */
-  const existingUser = await User.isUserExistsByEmail(payload.email);
+  /* ____________________ CHECK USER EXISTS ____________________ */
+  const existingUser = await User.findOne({ email: payload.email }).select(
+    '-password -confirmPassword -needsPasswordChange -verification -gender',
+  );
 
-  /* =============== EXISTING USER LOGIN ================== */
+  /* ____________________ EXISTING USER LOGIN ____________________ */
   if (existingUser) {
     if (existingUser.isDeleted) {
       throw new AppError(httpStatus.FORBIDDEN, 'User account is deleted');
@@ -422,14 +436,14 @@ const googleLogin = async (payload: {
       throw new AppError(httpStatus.FORBIDDEN, 'User is blocked');
     }
 
-    /* ================= UPDATE FCM TOKEN ================= */
+    /* ____________________ UPDATE FCM TOKEN ____________________ */
     if (payload?.fcmToken) {
       await User.findByIdAndUpdate(existingUser._id, {
         fcmToken: payload.fcmToken,
       });
     }
 
-    /* ================= CREATE JWT ================= */
+    /* ____________________ CREATE JWT ____________________ */
     const jwtPayload: TJwtPayload = {
       userId: existingUser._id.toString(),
       name: existingUser.name,
@@ -451,16 +465,17 @@ const googleLogin = async (payload: {
     return { user: existingUser, accessToken, refreshToken };
   }
 
-  /* ================== NEW USER CREATE ==================== */
+  const allowedRoles: TRole[] = [USER_ROLE.user, USER_ROLE.trainer];
+  const role = allowedRoles.includes(payload.role)
+    ? payload.role
+    : USER_ROLE.user;
+
+  /* ____________________ NEW USER CREATE ____________________ */
   const newUser = await User.create({
     name: payload.fullName,
     email: payload.email,
     phone: null,
-    streetAddress: 'N/A',
-    city: 'N/A',
-    state: 'N/A',
-    zipCode: 'N/A',
-    role: USER_ROLE.user,
+    role: role || USER_ROLE.user,
     loginWith: Login_With.google,
     isVerified: true,
     verification: { status: true },
@@ -468,7 +483,7 @@ const googleLogin = async (payload: {
     fcmToken: payload?.fcmToken || null,
   });
 
-  /* ================= CREATE JWT FOR NEW USER ================= */
+  /* ____________________ CREATE JWT FOR NEW USER ____________________ */
   const jwtPayload: TJwtPayload = {
     userId: newUser._id.toString(),
     name: newUser.name,
@@ -493,13 +508,14 @@ const googleLogin = async (payload: {
 const appleLogin = async (payload: {
   email: string;
   fullName: string;
+  role: TRole;
   fcmToken?: string;
 }) => {
   if (!payload?.email || !payload?.fullName) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Email and name are required');
   }
 
-  /* ================= FCM TOKEN VALIDATION ================= */
+  /* ____________________ FCM TOKEN VALIDATION ____________________ */
   if (payload?.fcmToken) {
     const isValid = await isValidFcmToken(payload.fcmToken);
     if (!isValid) {
@@ -507,10 +523,12 @@ const appleLogin = async (payload: {
     }
   }
 
-  /* ================= CHECK USER EXISTS ================= */
-  const existingUser = await User.isUserExistsByEmail(payload.email);
+  /* ____________________ CHECK USER EXISTS ____________________ */
+  const existingUser = await User.findOne({ email: payload.email }).select(
+    '-password -confirmPassword -needsPasswordChange -verification -gender',
+  );
 
-  /* =============== EXISTING USER LOGIN ================== */
+  /* ____________________ EXISTING USER LOGIN ____________________ */
   if (existingUser) {
     if (existingUser.isDeleted) {
       throw new AppError(httpStatus.FORBIDDEN, 'User account is deleted');
@@ -519,14 +537,14 @@ const appleLogin = async (payload: {
       throw new AppError(httpStatus.FORBIDDEN, 'User is blocked');
     }
 
-    /* ================= UPDATE FCM TOKEN ================= */
+    /* ____________________ UPDATE FCM TOKEN ____________________ */
     if (payload?.fcmToken) {
       await User.findByIdAndUpdate(existingUser._id, {
         fcmToken: payload.fcmToken,
       });
     }
 
-    /* ================= CREATE JWT ================= */
+    /* ____________________ CREATE JWT ____________________ */
     const jwtPayload: TJwtPayload = {
       userId: existingUser._id.toString(),
       name: existingUser.name,
@@ -548,21 +566,25 @@ const appleLogin = async (payload: {
     return { user: existingUser, accessToken, refreshToken };
   }
 
-  /* ================== NEW USER CREATE ==================== */
+  const allowedRoles: TRole[] = [USER_ROLE.user, USER_ROLE.trainer];
+  const role = allowedRoles.includes(payload.role)
+    ? payload.role
+    : USER_ROLE.user;
+
+  /* ____________________ NEW USER CREATE ____________________ */
   const newUser = await User.create({
-    fullName: payload.fullName,
+    name: payload.fullName,
     email: payload.email,
     phone: null,
-    // ✅ password নেই
-    role: USER_ROLE.user,
-    loginWith: Login_With.apple, // ✅ typo fix: loginWth → loginWith
+    role: role || USER_ROLE.user,
+    loginWith: Login_With.apple,
     isVerified: true,
     verification: { status: true },
     image: null,
     fcmToken: payload?.fcmToken || null,
   });
 
-  /* ================= CREATE JWT FOR NEW USER ================= */
+  /* ____________________ CREATE JWT FOR NEW USER ____________________ */
   const jwtPayload: TJwtPayload = {
     userId: newUser._id.toString(),
     name: newUser.name,

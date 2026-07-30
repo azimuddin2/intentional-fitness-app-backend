@@ -7,16 +7,6 @@ export type TLoginUser = {
   fcmToken?: string;
 };
 
-export type TJwtPayload = {
-  userId: ObjectId | string;
-  name: string;
-  email: string;
-  role: TRole;
-  image?: string;
-  iat?: number;
-  exp?: number;
-};
-
 export type TChangePassword = {
   oldPassword: string;
   newPassword: string;
@@ -26,4 +16,13 @@ export type TChangePassword = {
 export type TResetPassword = {
   newPassword: string;
   confirmPassword: string;
+};
+
+export type TJwtPayload = {
+  userId: ObjectId | string;
+  name: string;
+  email: string;
+  role: TRole;
+  iat?: number;
+  exp?: number;
 };
