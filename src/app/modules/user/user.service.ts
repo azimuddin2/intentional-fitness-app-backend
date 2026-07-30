@@ -157,33 +157,47 @@ const getUserByIdFromDB = async (id: string) => {
   const result = await User.findById(id).select('-password');
 
   if (!result) {
-    throw new AppError(404, 'This user not found');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (result?.isDeleted === true) {
-    throw new AppError(403, 'This user is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (result?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   return result;
 };
 
 const getUserProfileFromDB = async (email: string) => {
-  const result = await User.findOne({ email: email }).select('-password');
+  const result = await User.findOne({ email: email }).select(
+    '-password -confirmPassword',
+  );
 
   if (!result) {
-    throw new AppError(404, 'This user not found');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (result?.isDeleted === true) {
-    throw new AppError(403, 'This user is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (result?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   return result;
@@ -226,7 +240,7 @@ const updateUserProfileIntoDB = async (
       existingUser._id, // ✅ correct user reference
       { $set: { ...payload } },
       { new: true, runValidators: true, session },
-    );
+    ).select('-password -confirmPassword');
     if (!updatedUser) {
       throw new AppError(400, 'Failed to update user');
     }
@@ -252,15 +266,21 @@ const updateUserPictureIntoDB = async (
     'image status isDeleted',
   );
   if (!existingUser) {
-    throw new AppError(404, 'User not found');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (existingUser.isDeleted) {
-    throw new AppError(403, 'This user is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (existingUser.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   const session = await mongoose.startSession();
@@ -329,7 +349,8 @@ const deleteUserAccountFromDB = async (userId: string) => {
     userId,
     { isDeleted: true },
     { new: true },
-  );
+  ).select('-password -confirmPassword');
+
   if (!deletedUser) throw new AppError(400, 'Failed to delete user account');
 
   // 3️⃣ Send notification email
@@ -349,7 +370,7 @@ const deleteUserAccountFromDB = async (userId: string) => {
 
             <!-- Header -->
             <tr>
-              <td align="center" style="background-color: #D93025; padding: 30px 40px;">
+              <td align="center" style="background-color: #1F5C5C; padding: 30px 40px;">
                 <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">
                   Account Deleted
                 </h1>
@@ -429,15 +450,21 @@ const updateNotificationSettingsIntoDB = async (
   // 🔍 Step 1: Check if user exists & get email
   const existingUser = await User.findOne({ email }).select('');
   if (!existingUser) {
-    throw new AppError(404, 'User not found');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (existingUser?.isDeleted === true) {
-    throw new AppError(403, 'This user account is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (existingUser?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   const updatedUser = await User.findOneAndUpdate(

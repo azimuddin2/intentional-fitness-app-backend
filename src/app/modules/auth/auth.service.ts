@@ -24,15 +24,21 @@ const loginUser = async (payload: TLoginUser) => {
   const user = await User.findOne({ email: payload.email });
 
   if (!user) {
-    throw new AppError(404, 'This user is not found!');
+    throw new AppError(404, 'No account found with this email.');
   }
 
-  if (user.isDeleted === true) {
-    throw new AppError(403, 'This user is deleted!');
+  if (user?.isDeleted === true) {
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
-  if (user.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+  if (user?.status === 'blocked') {
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   const isPasswordMatched = await User.isPasswordMatched(
@@ -114,15 +120,21 @@ const refreshToken = async (token: string) => {
   const user = await User.findOne({ email: email });
 
   if (!user) {
-    throw new AppError(404, 'This user is not found!');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (user?.isDeleted === true) {
-    throw new AppError(403, 'This user account is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (user?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   // create token and sent to the client
@@ -151,15 +163,21 @@ const changePassword = async (
   const user = await User.isUserExistsByEmail(userData?.email);
 
   if (!user) {
-    throw new AppError(404, 'This user is not found!');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (user?.isDeleted === true) {
-    throw new AppError(403, 'This user account is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (user?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   // checking if the password is correct
@@ -196,15 +214,21 @@ const forgotPassword = async (email: string) => {
   const user = await User.isUserExistsByEmail(email);
 
   if (!user) {
-    throw new AppError(404, 'This user is not found!');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (user?.isDeleted === true) {
-    throw new AppError(403, 'This user account is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (user?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   // create token and sent to the client
@@ -327,15 +351,21 @@ const resetPassword = async (token: string, payload: TResetPassword) => {
   );
 
   if (!user) {
-    throw new AppError(404, 'This user is not found!');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (user?.isDeleted === true) {
-    throw new AppError(403, 'This user account is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (user?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   const verifyExpiresAt = user?.verification?.expiresAt as Date;
@@ -366,17 +396,22 @@ const resetPassword = async (token: string, payload: TResetPassword) => {
 
 const logoutUser = async (userId: string) => {
   const user = await User.findById(userId);
-
   if (!user) {
-    throw new AppError(404, 'This user is not found!');
+    throw new AppError(404, 'No account found with this email.');
   }
 
   if (user?.isDeleted === true) {
-    throw new AppError(403, 'This user account is deleted!');
+    throw new AppError(
+      403,
+      'This account has been deactivated. Please contact support.',
+    );
   }
 
   if (user?.status === 'blocked') {
-    throw new AppError(403, 'This user is blocked!');
+    throw new AppError(
+      403,
+      'This account has been suspended. Please contact support.',
+    );
   }
 
   const updatedUser = await User.findByIdAndUpdate(
@@ -430,10 +465,16 @@ const googleLogin = async (payload: {
   /* ____________________ EXISTING USER LOGIN ____________________ */
   if (existingUser) {
     if (existingUser.isDeleted) {
-      throw new AppError(httpStatus.FORBIDDEN, 'User account is deleted');
+      throw new AppError(
+        403,
+        'This account has been deactivated. Please contact support.',
+      );
     }
     if (existingUser.status === 'blocked') {
-      throw new AppError(httpStatus.FORBIDDEN, 'User is blocked');
+      throw new AppError(
+        403,
+        'This account has been suspended. Please contact support.',
+      );
     }
 
     /* ____________________ UPDATE FCM TOKEN ____________________ */
@@ -531,10 +572,16 @@ const appleLogin = async (payload: {
   /* ____________________ EXISTING USER LOGIN ____________________ */
   if (existingUser) {
     if (existingUser.isDeleted) {
-      throw new AppError(httpStatus.FORBIDDEN, 'User account is deleted');
+      throw new AppError(
+        403,
+        'This account has been deactivated. Please contact support.',
+      );
     }
     if (existingUser.status === 'blocked') {
-      throw new AppError(httpStatus.FORBIDDEN, 'User is blocked');
+      throw new AppError(
+        403,
+        'This account has been suspended. Please contact support.',
+      );
     }
 
     /* ____________________ UPDATE FCM TOKEN ____________________ */

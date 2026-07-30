@@ -21,15 +21,21 @@ const auth = (...requiredRoles: TUserRole[]) => {
 
     const user = await User.findOne({ email: email });
     if (!user) {
-      throw new AppError(404, 'This user is not found!');
+      throw new AppError(404, 'No account found with this email.');
     }
 
     if (user?.isDeleted === true) {
-      throw new AppError(403, 'TThis user account is deleted!');
+      throw new AppError(
+        403,
+        'This account has been deactivated. Please contact support.',
+      );
     }
 
     if (user?.status === 'blocked') {
-      throw new AppError(403, 'This user is blocked!');
+      throw new AppError(
+        403,
+        'This account has been suspended. Please contact support.',
+      );
     }
 
     if (requiredRoles && !requiredRoles.includes(role)) {

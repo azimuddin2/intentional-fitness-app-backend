@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post(
   '/',
-  auth('user'),
+  // auth('user', 'trainer'),
   validateRequest(SupportValidation.createSupportValidationSchema),
   SupportControllers.createSupport,
 );
