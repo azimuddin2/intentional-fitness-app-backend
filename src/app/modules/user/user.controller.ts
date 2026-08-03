@@ -14,6 +14,21 @@ const signupUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createUserByTrainer = catchAsync(async (req: Request, res: Response) => {
+  const trainerId = req.user.userId;
+  const result = await UserServices.createUserByTrainerIntoDB(
+    trainerId,
+    req.body,
+  );
+
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: 'User created successfully by trainer',
+    data: result,
+  });
+});
+
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.getAllUsersFromDB(req.query);
 
@@ -23,6 +38,21 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
     message: 'Users retrieved successfully',
     meta: result.meta,
     data: result.result,
+  });
+});
+
+const getUsersByTrainer = catchAsync(async (req, res) => {
+  const trainerId = req.user.userId;
+  const result = await UserServices.getUsersByTrainerFromDB(
+    trainerId,
+    req.query,
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Users retrieved successfully',
+    data: result,
   });
 });
 
@@ -131,7 +161,9 @@ const updateNotificationSettings = catchAsync(
 
 export const UserControllers = {
   signupUser,
+  createUserByTrainer,
   getAllUsers,
+  getUsersByTrainer,
   getUserById,
   getUserProfile,
   updateUserProfile,

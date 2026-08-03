@@ -33,6 +33,8 @@ export type TUser = {
 
   loginWith: 'google' | 'apple' | 'credentials';
 
+  trainer?: ObjectId | null;
+
   fcmToken?: string;
   notifications: boolean;
   isDeleted: boolean;

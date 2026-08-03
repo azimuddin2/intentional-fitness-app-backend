@@ -516,7 +516,7 @@ const googleLogin = async (payload: {
     name: payload.fullName,
     email: payload.email,
     phone: null,
-    role: role || USER_ROLE.user,
+    role: role || USER_ROLE.trainer,
     loginWith: Login_With.google,
     isVerified: true,
     verification: { status: true },

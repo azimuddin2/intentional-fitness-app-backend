@@ -11,7 +11,7 @@ const userSchema = new Schema<TUser, UserModel>(
       required: [true, 'Name is required'],
       trim: true,
       minlength: [3, 'Name must be at least 3 characters'],
-      maxlength: [50, 'Name can not exceed 20 characters'],
+      maxlength: [20, 'Name can not exceed 20 characters'],
     },
     email: {
       type: String,
@@ -31,6 +31,8 @@ const userSchema = new Schema<TUser, UserModel>(
     phone: {
       type: String,
       trim: true,
+      unique: true,
+      sparse: true,
       default: null,
       validate: {
         validator: function (v) {
@@ -41,7 +43,6 @@ const userSchema = new Schema<TUser, UserModel>(
           `${props.value} is not a valid international phone number`,
       },
     },
-
     password: {
       type: String,
       required: [true, 'Password is required'],
@@ -61,7 +62,6 @@ const userSchema = new Schema<TUser, UserModel>(
     passwordChangeAt: {
       type: Date,
     },
-
     image: {
       type: String,
       trim: true,
@@ -77,7 +77,6 @@ const userSchema = new Schema<TUser, UserModel>(
       required: false,
       default: null,
     },
-
     role: {
       type: String,
       enum: {
@@ -94,7 +93,6 @@ const userSchema = new Schema<TUser, UserModel>(
       },
       default: 'ongoing',
     },
-
     isVerified: {
       type: Boolean,
       default: false,
@@ -113,11 +111,15 @@ const userSchema = new Schema<TUser, UserModel>(
         default: false,
       },
     },
-
     loginWith: {
       type: String,
       enum: Login_With,
       default: Login_With.credentials,
+    },
+    trainer: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
     fcmToken: {
       type: String,

@@ -4,13 +4,15 @@ import { TUser } from './user.interface';
 import { User } from './user.model';
 import { sendEmail } from '../../utils/sendEmail';
 import QueryBuilder from '../../builder/QueryBuilder';
-import { userSearchableFields } from './user.constant';
+import { USER_ROLE, userSearchableFields } from './user.constant';
 import { deleteFromS3, uploadToS3 } from '../../utils/awsS3FileUploader';
 import { TJwtPayload } from '../auth/auth.interface';
 import { createToken } from '../auth/auth.utils';
 import config from '../../config';
 import { generateOtp } from '../../utils/generateOtp';
 import moment from 'moment';
+import httpStatus from 'http-status';
+import { generateTemporaryPassword } from './user.utils';
 
 const signupUserIntoDB = async (payload: TUser) => {
   // 1. Check if user already exists
@@ -133,6 +135,196 @@ const signupUserIntoDB = async (payload: TUser) => {
   return { accessToken };
 };
 
+const createUserByTrainerIntoDB = async (
+  trainerId: string,
+  payload: Partial<TUser>,
+) => {
+  /* ____________________ VALIDATE TRAINER ____________________ */
+  const trainer = await User.findById(trainerId);
+
+  if (!trainer) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Trainer not found');
+  }
+
+  if (trainer.role !== USER_ROLE.trainer) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'Only trainers are allowed to add users',
+    );
+  }
+
+  if (trainer.status === 'blocked' || trainer.isDeleted) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'This trainer account is not active',
+    );
+  }
+
+  /* ____________________ VALIDATE PAYLOAD ____________________ */
+  if (!payload?.email || !payload?.name) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Name and email are required');
+  }
+
+  /* ____________________ CHECK IF USER ALREADY EXISTS ____________________ */
+  const existingUser = await User.findOne({ email: payload.email });
+
+  if (existingUser) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      'An account with this email already exists',
+    );
+  }
+
+  const temporaryPassword = generateTemporaryPassword();
+
+  /* ____________________ CREATE USER UNDER TRAINER ____________________ */
+  const newUser = await User.create({
+    name: payload.name,
+    email: payload.email,
+    phone: payload.phone || null,
+    gender: payload.gender || null,
+    image: payload.image || null,
+
+    password: temporaryPassword,
+    confirmPassword: temporaryPassword,
+    needsPasswordChange: true,
+
+    role: USER_ROLE.user,
+    status: 'confirmed',
+
+    isVerified: true,
+    verification: {
+      otp: null,
+      expiresAt: null,
+      status: true,
+    },
+
+    loginWith: 'credentials',
+
+    trainer: trainer._id,
+  });
+
+  /* ____________________ SEND INVITATION EMAIL ____________________ */
+  await sendEmail(
+    newUser.email,
+    'Your Account Has Been Created',
+    `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Created</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f6; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="background-color: #1F5C5C; padding: 28px 40px;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600;">
+                Intentional Fitness
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 36px 40px;">
+
+              <!-- Title -->
+              <p style="font-size: 17px; font-weight: 600; color: #1a1a2e; text-align: center; margin: 0 0 6px 0;">
+                Your account is ready
+              </p>
+              <p style="font-size: 14px; color: #666666; text-align: center; margin: 0 0 24px 0;">
+                Your trainer <strong style="color: #1F5C5C;">${trainer.name}</strong> has created an account for you
+              </p>
+
+              <!-- Credentials Card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 12px 0; font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.8px;">
+                      Your login credentials
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                          <span style="font-size: 12px; color: #6b7280;">Email</span><br/>
+                          <span style="font-size: 14px; font-weight: 600; color: #1a1a2e;">${newUser.email}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0 0 0;">
+                          <span style="font-size: 12px; color: #6b7280;">Temporary password</span><br/>
+                          <span style="font-size: 20px; font-weight: 700; color: #1F5C5C; letter-spacing: 3px; font-family: 'Courier New', monospace;">
+                            ${temporaryPassword}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Warning -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 20px;">
+                <tr>
+                  <td style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px 14px;">
+                    <span style="font-size: 12px; color: #92400e;">
+                      ⚠️ Please log in and change your password as soon as possible.
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Instruction (no CTA button, app not published yet) -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 28px;">
+                <tr>
+                  <td align="center">
+                    <p style="font-size: 14px; color: #666666; margin: 0; line-height: 1.6;">
+                      Open the <strong style="color: #1F5C5C;">Intentional Fitness</strong> app on your phone and log in using the credentials above.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Note -->
+              <p style="font-size: 12px; color: #999999; text-align: center; margin: 24px 0 0 0; padding-top: 20px; border-top: 1px solid #eeeeee;">
+                If you were not expecting this, please contact your trainer.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="background-color: #f9fafa; padding: 18px 40px;">
+              <p style="font-size: 11px; color: #b0b0b0; margin: 0;">
+                &copy; ${new Date().getFullYear()} Intentional Fitness. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`,
+  );
+
+  /* ____________________ RETURN SAFE USER OBJECT ____________________ */
+  const userWithoutSensitiveData = await User.findById(newUser._id).select(
+    '-password -confirmPassword -verification',
+  );
+
+  return userWithoutSensitiveData;
+};
+
 const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   const baseQuery = {
     ...query,
@@ -141,6 +333,31 @@ const getAllUsersFromDB = async (query: Record<string, unknown>) => {
   };
 
   const queryBuilder = new QueryBuilder(User.find(), baseQuery)
+    .search(userSearchableFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await queryBuilder.countTotal();
+  const result = await queryBuilder.modelQuery;
+
+  return { meta, result };
+};
+
+const getUsersByTrainerFromDB = async (
+  trainer: string,
+  query: Record<string, unknown>,
+) => {
+  const { ...filters } = query;
+
+  if (!trainer || !mongoose.Types.ObjectId.isValid(trainer as string)) {
+    throw new AppError(400, 'Invalid user ID');
+  }
+
+  let usersQuery = User.find({ trainer: trainer, isDeleted: false });
+
+  const queryBuilder = new QueryBuilder(usersQuery, filters)
     .search(userSearchableFields)
     .filter()
     .sort()
@@ -485,7 +702,9 @@ const updateNotificationSettingsIntoDB = async (
 
 export const UserServices = {
   signupUserIntoDB,
+  createUserByTrainerIntoDB,
   getAllUsersFromDB,
+  getUsersByTrainerFromDB,
   getUserByIdFromDB,
   getUserProfileFromDB,
   updateUserProfileIntoDB,

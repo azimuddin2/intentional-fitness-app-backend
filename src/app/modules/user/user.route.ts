@@ -15,7 +15,16 @@ router.post(
   UserControllers.signupUser,
 );
 
+router.post(
+  '/create-user',
+  auth('trainer'),
+  validateRequest(UserValidations.createUserByTrainerValidationSchema),
+  UserControllers.createUserByTrainer,
+);
+
 router.get('/', auth('admin'), UserControllers.getAllUsers);
+
+router.get('/by-trainer', auth('trainer'), UserControllers.getUsersByTrainer);
 
 router.get(
   '/profile',

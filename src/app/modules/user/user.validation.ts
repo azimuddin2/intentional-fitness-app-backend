@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Gender, UserRole, UserStatus } from './user.constant';
 
-// ✅ SignUp (Create) User Validation Schema
 const createUserValidationSchema = z.object({
   body: z
     .object({
@@ -71,7 +70,30 @@ const createUserValidationSchema = z.object({
     }),
 });
 
-// ✅ Update User Validation Schema
+const createUserByTrainerValidationSchema = z.object({
+  body: z.object({
+    name: z
+      .string({
+        required_error: 'Name is required',
+        invalid_type_error: 'Name must be a string',
+      })
+      .min(3, 'Full name must be at least 3 characters')
+      .max(20, 'Full name cannot exceed 20 characters'),
+
+    email: z
+      .string({
+        required_error: 'Email is required',
+      })
+      .email('Invalid email address'),
+
+    phone: z
+      .string({
+        required_error: 'Mobile number is required',
+      })
+      .regex(/^\+?[0-9]{10,15}$/, 'Invalid phone number'),
+  }),
+});
+
 const updateUserValidationSchema = z.object({
   body: z.object({
     name: z
@@ -92,7 +114,6 @@ const updateUserValidationSchema = z.object({
   }),
 });
 
-// ✅ Change User Status Validation
 const changeStatusValidationSchema = z.object({
   body: z.object({
     status: z.enum([...UserStatus] as [string, ...string[]], {
@@ -101,7 +122,6 @@ const changeStatusValidationSchema = z.object({
   }),
 });
 
-// ✅ Notification Validation
 const notificationSettingsValidationSchema = z.object({
   body: z.object({
     notifications: z.boolean({
@@ -113,6 +133,7 @@ const notificationSettingsValidationSchema = z.object({
 
 export const UserValidations = {
   createUserValidationSchema,
+  createUserByTrainerValidationSchema,
   updateUserValidationSchema,
   changeStatusValidationSchema,
   notificationSettingsValidationSchema,
