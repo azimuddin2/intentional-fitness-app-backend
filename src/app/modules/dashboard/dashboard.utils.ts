@@ -1,28 +1,26 @@
-import { TEarningRange } from './dashboard.interface';
+import AppError from '../../errors/AppError';
+import httpStatus from 'http-status';
 
-export const getDateRange = (range: TEarningRange) => {
-  const now = new Date();
-  let start: Date;
+const buildDateFilter = (month?: string): Record<string, unknown> => {
+  if (!month) return {};
 
-  switch (range) {
-    case 'yearly':
-      start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-      break;
+  const selectedMonth = Number(month); // 1 = January, 12 = December
 
-    case 'monthly':
-      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-      break;
-
-    case 'weekly':
-    default:
-      start = new Date(now);
-      start.setDate(now.getDate() - 6); // last 7 days
-      start.setHours(0, 0, 0, 0);
-      break;
+  if (selectedMonth < 1 || selectedMonth > 12) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid month value');
   }
 
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
+  const currentYear = new Date().getFullYear();
 
-  return { start, end };
+  const startDate = new Date(currentYear, selectedMonth - 1, 1);
+  const endDate = new Date(currentYear, selectedMonth, 1);
+
+  return {
+    createdAt: {
+      $gte: startDate,
+      $lt: endDate,
+    },
+  };
 };
+
+export default buildDateFilter;

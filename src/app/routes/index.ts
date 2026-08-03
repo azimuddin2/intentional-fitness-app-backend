@@ -7,8 +7,7 @@ import { PrivacyRoutes } from '../modules/privacy/privacy.route';
 import { AboutRoutes } from '../modules/about/about.route';
 import { SupportRoutes } from '../modules/support/support.route';
 import { NotificationRoutes } from '../modules/notification/notification.route';
-import { NewsRoutes } from '../modules/news/news.route';
-import { PollRoutes } from '../modules/poll/poll.route';
+import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 
 const router = Router();
 
@@ -42,16 +41,12 @@ const moduleRoutes = [
     route: SupportRoutes,
   },
   {
-    path: '/news',
-    route: NewsRoutes,
-  },
-  {
-    path: '/polls',
-    route: PollRoutes,
-  },
-  {
     path: '/notifications',
     route: NotificationRoutes,
+  },
+  {
+    path: '/dashboard',
+    route: DashboardRoutes,
   },
 ];
 

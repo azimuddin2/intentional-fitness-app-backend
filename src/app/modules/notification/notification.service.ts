@@ -11,9 +11,8 @@ const getNotificationFromDB = async (query: Record<string, any>) => {
     throw new AppError(400, 'Invalid Receiver ID');
   }
 
-  const notificationQuery: any = { receiver };
+  const notificationQuery: Record<string, unknown> = { receiver };
 
-  // type filter
   if (type) {
     notificationQuery.type = type;
   }
@@ -27,12 +26,18 @@ const getNotificationFromDB = async (query: Record<string, any>) => {
     .fields()
     .paginate();
 
-  const data: any = await queryModel.modelQuery;
+  const result = await queryModel.modelQuery;
   const meta = await queryModel.countTotal();
+
+  const unreadCount = await Notification.countDocuments({
+    receiver,
+    isRead: false,
+  });
 
   return {
     meta,
-    data,
+    unreadCount,
+    result,
   };
 };
 

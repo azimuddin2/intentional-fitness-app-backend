@@ -1,10 +1,11 @@
 import { Types } from 'mongoose';
 import { User } from '../user/user.model';
 import { sendNotification } from './notification.utils';
+import { TType } from './notification.interface';
 
 export interface IAdminSendNotificationPayload {
   sender: Types.ObjectId;
-  type?: 'text' | 'reminder' | 'payment' | 'booking';
+  type?: TType;
   title: string;
   message: string;
   link?: string;

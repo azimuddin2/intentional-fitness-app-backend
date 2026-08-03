@@ -1,5 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { INotification } from './notification.interface';
+import { Types } from './notification.constant';
+import { UserRole } from '../user/user.constant';
 
 const NotificationSchema = new Schema<INotification>(
   {
@@ -19,12 +21,19 @@ const NotificationSchema = new Schema<INotification>(
     },
     receiverRole: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: {
+        values: UserRole,
+        message: '{VALUE} is not valid',
+      },
       required: true,
     },
     type: {
       type: String,
-      default: 'text',
+      enum: {
+        values: Types,
+        message: '{VALUE} is not valid',
+      },
+      default: null,
     },
     title: {
       type: String,

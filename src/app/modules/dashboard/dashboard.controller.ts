@@ -1,69 +1,31 @@
-// import { Request, Response } from 'express';
-// import catchAsync from '../../utils/catchAsync';
-// import sendResponse from '../../utils/sendResponse';
-// import { DashboardService } from './dashboard.service';
+import { Request, Response } from 'express';
+import catchAsync from '../../utils/catchAsync';
+import { DashboardServices } from './dashboard.service';
+import sendResponse from '../../utils/sendResponse';
 
-// const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
-//   const result = await DashboardService.getDashboardStatsFromDB();
+const getTotalUsers = catchAsync(async (req: Request, res: Response) => {
+  const result = await DashboardServices.getTotalUsersFromDB(req.query);
 
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Admin Dashboard Stats retrieved successfully',
-//     data: result,
-//   });
-// });
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Total users retrieved successfully',
+    data: result,
+  });
+});
 
-// const getEarningsOverview = catchAsync(async (req: Request, res: Response) => {
-//   const { year } = req.query;
-//   const result = await DashboardService.getEarningsOverviewFromDB(Number(year));
+const getTotalTrainers = catchAsync(async (req: Request, res: Response) => {
+  const result = await DashboardServices.getTotalTrainersFromDB(req.query);
 
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Admin Dashboard Earnings Overview retrieved successfully',
-//     data: result,
-//   });
-// });
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Total trainers retrieved successfully',
+    data: result,
+  });
+});
 
-// const getUserOverview = catchAsync(async (req: Request, res: Response) => {
-//   const { year } = req.query;
-//   const result = await DashboardService.getUserOverviewFromDB(Number(year));
-
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Admin Dashboard User Overview retrieved successfully',
-//     data: result,
-//   });
-// });
-
-// const getTrafficByLocation = catchAsync(async (req: Request, res: Response) => {
-//   const result = await DashboardService.getTrafficByLocationFromDB();
-
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Admin Dashboard Traffic By Location retrieved successfully',
-//     data: result,
-//   });
-// });
-
-// const getTopDonationsChart = catchAsync(async (req: Request, res: Response) => {
-//   const result = await DashboardService.getTopDonationsChartFromDB();
-
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Admin Dashboard Top Donations Chart retrieved successfully',
-//     data: result,
-//   });
-// });
-
-// export const DashboardControllers = {
-//   getDashboardStats,
-//   getEarningsOverview,
-//   getUserOverview,
-//   getTrafficByLocation,
-//   getTopDonationsChart,
-// };
+export const DashboardControllers = {
+  getTotalUsers,
+  getTotalTrainers,
+};
