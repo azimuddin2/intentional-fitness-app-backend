@@ -1,21 +1,30 @@
 import mongoose from 'mongoose';
 import app from './app';
-import { Server } from 'http';
+import { createServer, Server } from 'http';
 import config from './app/config';
+import initializeSocketIO from './socket';
 import chalk from 'chalk';
 
 let server: Server;
+export const io = initializeSocketIO(createServer(app));
 
 async function main() {
   try {
     await mongoose.connect(config.database_url as string);
     console.log(
-      chalk.green('✅ Connection to database is successfully established!'),
+      chalk.green('🟢 Connection to database is successfully established'),
     );
 
-    server = app.listen(Number(config.port), config.ip as string, () => {
+    server = app.listen(config.port, () => {
       console.log(chalk.blue(`🚀 Server is running on port: ${config.port}`));
     });
+
+    io.listen(Number(config.socket_port));
+    console.log(
+      chalk.magenta(`🔌 Socket is listening on port: ${config.socket_port}`),
+    );
+
+    (global as any).socketio = io;
   } catch (error) {
     console.log(chalk.red('❌ Error:', error));
   }

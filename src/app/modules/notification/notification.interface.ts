@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { TRole } from '../user/user.interface';
 
-export type TType = 'exercise' | 'program' | 'homework' | 'goal';
+export type TType = 'auth' | 'exercise' | 'program' | 'homework' | 'goal';
 
 export interface INotification {
   sender: Types.ObjectId;

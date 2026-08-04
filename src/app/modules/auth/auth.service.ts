@@ -422,6 +422,8 @@ const logoutUser = async (userId: string) => {
 
   const tokenToUse = updatedUser?.fcmToken;
 
+  console.log('User logged out, FCM token cleared:', updatedUser?.fcmToken);
+
   // Send notification only if token exists AND valid
   if (tokenToUse && updatedUser?.notifications) {
     sendNotification([tokenToUse], {
@@ -431,7 +433,7 @@ const logoutUser = async (userId: string) => {
       receiverEmail: updatedUser.email,
       receiverRole: updatedUser.role,
       sender: updatedUser._id as any,
-      type: 'text',
+      type: 'auth',
     });
   }
 
