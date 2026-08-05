@@ -8,7 +8,7 @@ const upload = multer({ storage: memoryStorage() });
 
 router.post(
   '/',
-  auth('customer', 'freelancer', 'owner', 'admin'),
+  auth('user', 'trainer'),
   upload.fields([{ name: 'images', maxCount: 10 }]),
   MessageImageController.createImageUpload,
 );

@@ -8,6 +8,7 @@ import { AboutRoutes } from '../modules/about/about.route';
 import { SupportRoutes } from '../modules/support/support.route';
 import { NotificationRoutes } from '../modules/notification/notification.route';
 import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
+import { StabilizeCategoryRoutes } from '../modules/stabilizeCategory/stabilizeCategory.route';
 
 const router = Router();
 
@@ -43,6 +44,10 @@ const moduleRoutes = [
   {
     path: '/notifications',
     route: NotificationRoutes,
+  },
+  {
+    path: '/stabilize-categories',
+    route: StabilizeCategoryRoutes,
   },
   {
     path: '/dashboard',
