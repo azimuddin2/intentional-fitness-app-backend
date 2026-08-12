@@ -8,11 +8,6 @@ const trainingProgramSchema = new Schema<TTrainingProgram>(
       ref: 'User',
       required: true,
     },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
     name: {
       type: String,
       required: true,
@@ -27,6 +22,8 @@ const trainingProgramSchema = new Schema<TTrainingProgram>(
     timestamps: true,
   },
 );
+
+trainingProgramSchema.index({ trainer: 1, name: 1 }, { unique: true });
 
 export const TrainingProgram = model<TTrainingProgram>(
   'TrainingProgram',

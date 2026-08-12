@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StabilizeCategoryServices } from './stabilizeCategory.service';
+import AppError from '../../errors/AppError';
 
 const createStabilizeCategory = catchAsync(
   async (req: Request, res: Response) => {
@@ -23,10 +24,17 @@ const createStabilizeCategory = catchAsync(
   },
 );
 
-const getAllStabilizeCategories = catchAsync(
+const getStabilizeCategoriesByTrainer = catchAsync(
   async (req: Request, res: Response) => {
+    const trainerId = req.user.userId;
+
+    if (!trainerId) {
+      throw new AppError(400, 'Trainer ID is required');
+    }
+
     const result =
-      await StabilizeCategoryServices.getAllStabilizeCategoriesFromDB(
+      await StabilizeCategoryServices.getStabilizeCategoriesByTrainerFromDB(
+        trainerId,
         req.query,
       );
 
@@ -90,7 +98,7 @@ const deleteStabilizeCategory = catchAsync(
 
 export const StabilizeCategoryControllers = {
   createStabilizeCategory,
-  getAllStabilizeCategories,
+  getStabilizeCategoriesByTrainer,
   getStabilizeCategoryById,
   updateStabilizeCategory,
   deleteStabilizeCategory,

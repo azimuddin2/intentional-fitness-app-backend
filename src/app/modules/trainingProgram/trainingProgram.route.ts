@@ -1,8 +1,8 @@
 import express from 'express';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
-import { StabilizeCategoryValidations } from './stabilizeCategory.validation';
-import { StabilizeCategoryControllers } from './stabilizeCategory.controller';
+import { TrainingProgramValidations } from './trainingProgram.validation';
+import { TrainingProgramControllers } from './trainingProgram.controller';
 
 const router = express.Router();
 
@@ -10,36 +10,36 @@ router.post(
   '/',
   auth('trainer'),
   validateRequest(
-    StabilizeCategoryValidations.createStabilizeCategoryValidationSchema,
+    TrainingProgramValidations.createTrainingProgramValidationSchema,
   ),
-  StabilizeCategoryControllers.createStabilizeCategory,
+  TrainingProgramControllers.createTrainingProgram,
 );
 
 router.get(
   '/',
   auth('trainer', 'user'),
-  StabilizeCategoryControllers.getAllStabilizeCategories,
+  TrainingProgramControllers.getTrainingProgramsByTrainer,
 );
 
 router.get(
   '/:id',
   auth('trainer', 'user'),
-  StabilizeCategoryControllers.getStabilizeCategoryById,
+  TrainingProgramControllers.getTrainingProgramById,
 );
 
 router.patch(
   '/:id',
   auth('trainer'),
   validateRequest(
-    StabilizeCategoryValidations.updateStabilizeCategoryValidationSchema,
+    TrainingProgramValidations.updateTrainingProgramValidationSchema,
   ),
-  StabilizeCategoryControllers.updateStabilizeCategory,
+  TrainingProgramControllers.updateTrainingProgram,
 );
 
 router.delete(
   '/:id',
   auth('trainer'),
-  StabilizeCategoryControllers.deleteStabilizeCategory,
+  TrainingProgramControllers.deleteTrainingProgram,
 );
 
-export const StabilizeCategoryRoutes = router;
+export const TrainingProgramRoutes = router;

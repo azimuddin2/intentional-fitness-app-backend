@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { TTrainingProgram } from './trainingProgram.interface';
@@ -10,12 +11,11 @@ const createTrainingProgramIntoDB = async (
   const isCategoryExists = await TrainingProgram.findOne({
     name: payload.name,
     trainer: trainerId,
-    user: payload.user,
     isDeleted: false,
   });
 
   if (isCategoryExists) {
-    throw new AppError(400, 'Training program already exists for this user');
+    throw new AppError(400, 'Training program already exists for this trainer');
   }
 
   const result = await TrainingProgram.create({
@@ -29,14 +29,21 @@ const createTrainingProgramIntoDB = async (
   return result;
 };
 
-const getAllTrainingProgramsFromDB = async (query: Record<string, unknown>) => {
+const getTrainingProgramsByTrainerFromDB = async (
+  trainerId: string,
+  query: Record<string, unknown>,
+) => {
+  if (!trainerId || !mongoose.Types.ObjectId.isValid(trainerId)) {
+    throw new AppError(400, 'Invalid trainer ID');
+  }
+
   const trainingProgramQuery = new QueryBuilder(
-    TrainingProgram.find({ isDeleted: false })
-      .populate('trainer', 'name email image')
-      .populate('user', 'name email image'),
+    TrainingProgram.find({
+      trainer: trainerId,
+      isDeleted: false,
+    }).populate('trainer', 'name email'),
     query,
   )
-    .search([''])
     .filter()
     .sort()
     .paginate()
@@ -82,14 +89,13 @@ const updateTrainingProgramIntoDB = async (
     const isDuplicateName = await TrainingProgram.findOne({
       name: payload.name,
       trainer: isProgramExists.trainer,
-      user: isProgramExists.user,
       isDeleted: false,
     });
 
     if (isDuplicateName) {
       throw new AppError(
         400,
-        'Training program name already exists for this user',
+        'Training program name already exists for this trainer',
       );
     }
   }
@@ -141,7 +147,7 @@ const deleteTrainingProgramFromDB = async (id: string) => {
 
 export const TrainingProgramServices = {
   createTrainingProgramIntoDB,
-  getAllTrainingProgramsFromDB,
+  getTrainingProgramsByTrainerFromDB,
   getTrainingProgramByIdFromDB,
   updateTrainingProgramIntoDB,
   deleteTrainingProgramFromDB,

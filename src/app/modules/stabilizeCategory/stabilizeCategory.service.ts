@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { TStabilizeCategory } from './stabilizeCategory.interface';
@@ -10,12 +11,14 @@ const createStabilizeCategoryIntoDB = async (
   const isCategoryExists = await StabilizeCategory.findOne({
     name: payload.name,
     trainer: trainerId,
-    user: payload.user,
     isDeleted: false,
   });
 
   if (isCategoryExists) {
-    throw new AppError(400, 'Stabilize category already exists for this user');
+    throw new AppError(
+      400,
+      'Stabilize category already exists for this trainer',
+    );
   }
 
   const result = await StabilizeCategory.create({
@@ -29,16 +32,21 @@ const createStabilizeCategoryIntoDB = async (
   return result;
 };
 
-const getAllStabilizeCategoriesFromDB = async (
+const getStabilizeCategoriesByTrainerFromDB = async (
+  trainerId: string,
   query: Record<string, unknown>,
 ) => {
+  if (!trainerId || !mongoose.Types.ObjectId.isValid(trainerId)) {
+    throw new AppError(400, 'Invalid trainer ID');
+  }
+
   const stabilizeCategoryQuery = new QueryBuilder(
-    StabilizeCategory.find({ isDeleted: false })
-      .populate('trainer', 'name email image')
-      .populate('user', 'name email image'),
+    StabilizeCategory.find({
+      trainer: trainerId,
+      isDeleted: false,
+    }).populate('trainer', 'name email'),
     query,
   )
-    .search([''])
     .filter()
     .sort()
     .paginate()
@@ -51,9 +59,7 @@ const getAllStabilizeCategoriesFromDB = async (
 };
 
 const getStabilizeCategoryByIdFromDB = async (id: string) => {
-  const result = await StabilizeCategory.findById(id)
-    .populate('trainer', 'name email image')
-    .populate('user', 'name email image');
+  const result = await StabilizeCategory.findById(id);
 
   if (!result) {
     throw new AppError(404, 'Stabilize category not found');
@@ -84,12 +90,14 @@ const updateStabilizeCategoryIntoDB = async (
     const isDuplicateName = await StabilizeCategory.findOne({
       name: payload.name,
       trainer: isCategoryExists.trainer,
-      user: isCategoryExists.user,
       isDeleted: false,
     });
 
     if (isDuplicateName) {
-      throw new AppError(400, 'Category name already exists for this user');
+      throw new AppError(
+        400,
+        'Stabilize category name already exists for this trainer',
+      );
     }
   }
 
@@ -140,7 +148,7 @@ const deleteStabilizeCategoryFromDB = async (id: string) => {
 
 export const StabilizeCategoryServices = {
   createStabilizeCategoryIntoDB,
-  getAllStabilizeCategoriesFromDB,
+  getStabilizeCategoriesByTrainerFromDB,
   getStabilizeCategoryByIdFromDB,
   updateStabilizeCategoryIntoDB,
   deleteStabilizeCategoryFromDB,
