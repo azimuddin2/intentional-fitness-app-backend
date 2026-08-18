@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongoose';
 import { TUser } from '../user/user.interface';
 
-export type TWeeklyJournalCategory = {
+export type TWeeklyJournalTask = {
   _id: ObjectId;
   trainer: ObjectId | TUser;
   name: string;

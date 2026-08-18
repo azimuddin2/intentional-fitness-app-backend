@@ -1,4 +1,4 @@
-export const DEFAULT_CATEGORIES = [
+export const DEFAULT_TASKS = [
   'Home Prime',
   'Training',
   'Daily Warm up',

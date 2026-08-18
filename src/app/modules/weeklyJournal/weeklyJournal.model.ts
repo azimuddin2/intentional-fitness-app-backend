@@ -8,9 +8,9 @@ import { WellnessStatus } from './weeklyJournal.constant';
 
 const dailyTaskSchema = new Schema<TDailyTask>(
   {
-    category: {
+    task: {
       type: Schema.Types.ObjectId,
-      ref: 'WeeklyJournalCategory',
+      ref: 'WeeklyJournalTask',
       required: true,
     },
     completed: {

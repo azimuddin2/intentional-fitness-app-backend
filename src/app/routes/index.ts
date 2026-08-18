@@ -10,7 +10,7 @@ import { NotificationRoutes } from '../modules/notification/notification.route';
 import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 import { StabilizeCategoryRoutes } from '../modules/stabilizeCategory/stabilizeCategory.route';
 import { TrainingProgramRoutes } from '../modules/trainingProgram/trainingProgram.route';
-import { WeeklyJournalCategoryRoutes } from '../modules/weeklyJournalCategory/weeklyJournalCategory.route';
+import { WeeklyJournalTaskRoutes } from '../modules/weeklyJournalTask/weeklyJournalTask.route';
 
 const router = Router();
 
@@ -56,8 +56,8 @@ const moduleRoutes = [
     route: TrainingProgramRoutes,
   },
   {
-    path: '/weekly-journal-categories',
-    route: WeeklyJournalCategoryRoutes,
+    path: '/weekly-journal-tasks',
+    route: WeeklyJournalTaskRoutes,
   },
   {
     path: '/dashboard',

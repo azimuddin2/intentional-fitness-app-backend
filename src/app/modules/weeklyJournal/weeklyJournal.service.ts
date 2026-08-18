@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { WeeklyJournal } from './weeklyJournal.model';
-import { WeeklyJournalCategory } from '../weeklyJournalCategory/weeklyJournalCategory.model';
 import { User } from '../user/user.model';
 import { TWellnessStatus } from './weeklyJournal.interface';
+import { WeeklyJournalTask } from '../weeklyJournalTask/weeklyJournalTask.model';
 
 const createNewWeekIntoDB = async (clientId: string) => {
   if (!clientId || !mongoose.Types.ObjectId.isValid(clientId)) {
@@ -27,6 +27,21 @@ const createNewWeekIntoDB = async (clientId: string) => {
 
   const trainerId = client.trainer;
 
+  /* ____________________ BLOCK IF AN ACTIVE WEEK ALREADY EXISTS ____________________ */
+  const existingCurrentWeek = await WeeklyJournal.findOne({
+    client: clientId,
+    isCurrent: true,
+    isDeleted: false,
+  });
+
+  if (existingCurrentWeek) {
+    throw new AppError(
+      400,
+      `You already have an active week (Week ${existingCurrentWeek.weekNumber}). Please complete it before adding a new one.`,
+    );
+  }
+
+  /* ____________________ FIND LAST WEEK (FOR NUMBERING/DATES) ____________________ */
   const lastWeek = await WeeklyJournal.findOne({
     client: clientId,
     isDeleted: false,
@@ -45,13 +60,13 @@ const createNewWeekIntoDB = async (clientId: string) => {
 
   const endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
 
-  const categories = await WeeklyJournalCategory.find({
+  const tasks = await WeeklyJournalTask.find({
     trainer: trainerId,
     isDeleted: false,
   });
 
-  const tasksTemplate = categories.map((cat) => ({
-    category: cat._id,
+  const tasksTemplate = tasks.map((task) => ({
+    task: task._id,
     completed: false,
   }));
 
@@ -62,11 +77,6 @@ const createNewWeekIntoDB = async (clientId: string) => {
     wellness: {},
     isSubmitted: false,
   }));
-
-  if (lastWeek) {
-    lastWeek.isCurrent = false;
-    await lastWeek.save();
-  }
 
   const result = await WeeklyJournal.create({
     client: clientId,
@@ -97,7 +107,7 @@ const getAllWeeksByClientFromDB = async (
     WeeklyJournal.find({
       client: clientId,
       isDeleted: false,
-    }).select('weekNumber startDate endDate isCurrent createdAt'),
+    }),
     query,
   )
     .filter()
@@ -119,7 +129,7 @@ const getSingleWeekFromDB = async (weekId: string) => {
   const result = await WeeklyJournal.findOne({
     _id: weekId,
     isDeleted: false,
-  }).populate('dailyEntries.tasks.category', 'name');
+  }).populate('dailyEntries.tasks.task', 'name');
 
   if (!result) {
     throw new AppError(404, 'Week not found');
@@ -181,7 +191,7 @@ const submitDailyEntryIntoDB = async (
   payload: {
     date: string;
     notes?: string;
-    tasks: { category: string; completed: boolean }[];
+    tasks: { task: string; completed: boolean }[];
     wellness?: {
       sleepQuality?: TWellnessStatus;
       emotionalStresses?: TWellnessStatus;
@@ -189,6 +199,12 @@ const submitDailyEntryIntoDB = async (
     };
   },
 ) => {
+  /* ____________________ VALIDATE IDS ____________________ */
+  if (!weekId || !mongoose.Types.ObjectId.isValid(weekId)) {
+    throw new AppError(400, 'Invalid week ID');
+  }
+
+  /* ____________________ VALIDATE DATE ____________________ */
   const parsedDate = new Date(payload.date);
 
   if (isNaN(parsedDate.getTime())) {
@@ -197,6 +213,7 @@ const submitDailyEntryIntoDB = async (
 
   const entryDate = parsedDate.toISOString().split('T')[0];
 
+  /* ____________________ VALIDATE OWNERSHIP ____________________ */
   const week = await WeeklyJournal.findOne({
     _id: weekId,
     client: clientId,
@@ -210,6 +227,7 @@ const submitDailyEntryIntoDB = async (
     throw new AppError(400, 'This week has been deleted');
   }
 
+  /* ____________________ FIND TARGET DAILY ENTRY ____________________ */
   const entryIndex = week.dailyEntries.findIndex(
     (entry) => entry.date.toISOString().split('T')[0] === entryDate,
   );
@@ -220,34 +238,32 @@ const submitDailyEntryIntoDB = async (
 
   const targetEntry = week.dailyEntries[entryIndex];
 
-  const existingCategoryIds = targetEntry.tasks.map((t) =>
-    t.category.toString(),
+  /* ____________________ VALIDATE TASK IDS BELONG TO THIS ENTRY ____________________ */
+  const existingTaskIds = targetEntry.tasks.map((t) => t.task.toString());
+
+  const hasInvalidTask = payload.tasks.some(
+    (t) => !existingTaskIds.includes(t.task),
   );
 
-  const hasInvalidCategory = payload.tasks.some(
-    (t) => !existingCategoryIds.includes(t.category),
-  );
-
-  if (hasInvalidCategory) {
-    throw new AppError(
-      400,
-      'One or more task categories do not belong to this entry',
-    );
+  if (hasInvalidTask) {
+    throw new AppError(400, 'One or more tasks do not belong to this entry');
   }
 
+  /* ____________________ MERGE TASKS (keep unmatched tasks unchanged) ____________________ */
+  const updatedTasks = targetEntry.tasks.map((existingTask) => {
+    const matchedTask = payload.tasks.find(
+      (t) => t.task === existingTask.task.toString(),
+    );
+
+    return matchedTask
+      ? { task: existingTask.task, completed: matchedTask.completed }
+      : existingTask;
+  });
+
   try {
-    const updatedTasks = targetEntry.tasks.map((existingTask) => {
-      const matchedTask = payload.tasks.find(
-        (t) => t.category === existingTask.category.toString(),
-      );
-
-      return matchedTask
-        ? { category: existingTask.category, completed: matchedTask.completed }
-        : existingTask;
-    });
-
+    /* ____________________ UPDATE DAILY ENTRY ____________________ */
     targetEntry.notes = payload.notes ?? targetEntry.notes;
-    targetEntry.tasks = updatedTasks;
+    targetEntry.tasks = updatedTasks as typeof targetEntry.tasks;
     targetEntry.wellness = {
       ...targetEntry.wellness,
       ...payload.wellness,

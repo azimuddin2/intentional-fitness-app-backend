@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongoose';
 import { TUser } from '../user/user.interface';
-import { TWeeklyJournalCategory } from '../weeklyJournalCategory/weeklyJournalCategory.interface';
+import { TWeeklyJournalTask } from '../weeklyJournalTask/weeklyJournalTask.interface';
 
 export type TWellnessStatus = 'green' | 'yellow' | 'red';
 
 export type TDailyTask = {
-  category: ObjectId | TWeeklyJournalCategory;
+  task: ObjectId | TWeeklyJournalTask;
   completed: boolean;
 };
 
