@@ -1,12 +1,5 @@
+import { DEFAULT_CATEGORIES } from './weeklyJournalCategory.constant';
 import { WeeklyJournalCategory } from './weeklyJournalCategory.model';
-
-const DEFAULT_CATEGORIES = [
-  'Home Prime',
-  'Training',
-  'Daily Warm up',
-  'Breath/P-Floor',
-  'Cardio',
-];
 
 const seedDefaultCategoriesIntoDB = async (trainerId: string) => {
   const categories = DEFAULT_CATEGORIES.map((name) => ({
