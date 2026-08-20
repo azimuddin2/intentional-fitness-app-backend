@@ -11,20 +11,19 @@ const createStabilizeCategoryIntoDB = async (
   const isCategoryExists = await StabilizeCategory.findOne({
     name: payload.name,
     trainer: trainerId,
+    user: payload.user,
     isDeleted: false,
   });
 
   if (isCategoryExists) {
-    throw new AppError(
-      400,
-      'Stabilize category already exists for this trainer',
-    );
+    throw new AppError(400, 'Stabilize category already exists for this user');
   }
 
   const result = await StabilizeCategory.create({
     ...payload,
     trainer: trainerId,
   });
+
   if (!result) {
     throw new AppError(400, 'Failed to create stabilize category');
   }
@@ -32,19 +31,19 @@ const createStabilizeCategoryIntoDB = async (
   return result;
 };
 
-const getStabilizeCategoriesByTrainerFromDB = async (
-  trainerId: string,
+const getStabilizeCategoriesByUserFromDB = async (
+  userId: string,
   query: Record<string, unknown>,
 ) => {
-  if (!trainerId || !mongoose.Types.ObjectId.isValid(trainerId)) {
-    throw new AppError(400, 'Invalid trainer ID');
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
   const stabilizeCategoryQuery = new QueryBuilder(
     StabilizeCategory.find({
-      trainer: trainerId,
+      user: userId,
       isDeleted: false,
-    }).populate('trainer', 'name email'),
+    }).populate('user', 'name email'),
     query,
   )
     .filter()
@@ -90,13 +89,14 @@ const updateStabilizeCategoryIntoDB = async (
     const isDuplicateName = await StabilizeCategory.findOne({
       name: payload.name,
       trainer: isCategoryExists.trainer,
+      user: isCategoryExists.user,
       isDeleted: false,
     });
 
     if (isDuplicateName) {
       throw new AppError(
         400,
-        'Stabilize category name already exists for this trainer',
+        'Stabilize category name already exists for this user',
       );
     }
   }
@@ -148,7 +148,7 @@ const deleteStabilizeCategoryFromDB = async (id: string) => {
 
 export const StabilizeCategoryServices = {
   createStabilizeCategoryIntoDB,
-  getStabilizeCategoriesByTrainerFromDB,
+  getStabilizeCategoriesByUserFromDB,
   getStabilizeCategoryByIdFromDB,
   updateStabilizeCategoryIntoDB,
   deleteStabilizeCategoryFromDB,

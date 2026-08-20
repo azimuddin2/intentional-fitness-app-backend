@@ -8,6 +8,11 @@ const stabilizeCategorySchema = new Schema<TStabilizeCategory>(
       ref: 'User',
       required: true,
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -23,7 +28,10 @@ const stabilizeCategorySchema = new Schema<TStabilizeCategory>(
   },
 );
 
-stabilizeCategorySchema.index({ trainer: 1, name: 1 }, { unique: true });
+stabilizeCategorySchema.index(
+  { trainer: 1, user: 1, name: 1 },
+  { unique: true },
+);
 
 export const StabilizeCategory = model<TStabilizeCategory>(
   'StabilizeCategory',

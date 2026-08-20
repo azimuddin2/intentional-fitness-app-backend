@@ -24,17 +24,17 @@ const createStabilizeCategory = catchAsync(
   },
 );
 
-const getStabilizeCategoriesByTrainer = catchAsync(
+const getStabilizeCategoriesByUser = catchAsync(
   async (req: Request, res: Response) => {
-    const trainerId = req.user.userId;
+    const userId = req.query.user as string;
 
-    if (!trainerId) {
-      throw new AppError(400, 'Trainer ID is required');
+    if (!userId) {
+      throw new AppError(400, 'User ID is required');
     }
 
     const result =
-      await StabilizeCategoryServices.getStabilizeCategoriesByTrainerFromDB(
-        trainerId,
+      await StabilizeCategoryServices.getStabilizeCategoriesByUserFromDB(
+        userId,
         req.query,
       );
 
@@ -98,7 +98,7 @@ const deleteStabilizeCategory = catchAsync(
 
 export const StabilizeCategoryControllers = {
   createStabilizeCategory,
-  getStabilizeCategoriesByTrainer,
+  getStabilizeCategoriesByUser,
   getStabilizeCategoryById,
   updateStabilizeCategory,
   deleteStabilizeCategory,

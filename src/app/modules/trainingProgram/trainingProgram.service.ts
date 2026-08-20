@@ -10,12 +10,13 @@ const createTrainingProgramIntoDB = async (
 ) => {
   const isCategoryExists = await TrainingProgram.findOne({
     name: payload.name,
+    user: payload.user,
     trainer: trainerId,
     isDeleted: false,
   });
 
   if (isCategoryExists) {
-    throw new AppError(400, 'Training program already exists for this trainer');
+    throw new AppError(400, 'Training program already exists for this user');
   }
 
   const result = await TrainingProgram.create({
@@ -29,19 +30,19 @@ const createTrainingProgramIntoDB = async (
   return result;
 };
 
-const getTrainingProgramsByTrainerFromDB = async (
-  trainerId: string,
+const getTrainingProgramsByUserFromDB = async (
+  userId: string,
   query: Record<string, unknown>,
 ) => {
-  if (!trainerId || !mongoose.Types.ObjectId.isValid(trainerId)) {
-    throw new AppError(400, 'Invalid trainer ID');
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid User ID');
   }
 
   const trainingProgramQuery = new QueryBuilder(
     TrainingProgram.find({
-      trainer: trainerId,
+      user: userId,
       isDeleted: false,
-    }).populate('trainer', 'name email'),
+    }).populate('user', 'name email'),
     query,
   )
     .filter()
@@ -89,13 +90,14 @@ const updateTrainingProgramIntoDB = async (
     const isDuplicateName = await TrainingProgram.findOne({
       name: payload.name,
       trainer: isProgramExists.trainer,
+      user: isProgramExists.user,
       isDeleted: false,
     });
 
     if (isDuplicateName) {
       throw new AppError(
         400,
-        'Training program name already exists for this trainer',
+        'Training program name already exists for this user',
       );
     }
   }
@@ -147,7 +149,7 @@ const deleteTrainingProgramFromDB = async (id: string) => {
 
 export const TrainingProgramServices = {
   createTrainingProgramIntoDB,
-  getTrainingProgramsByTrainerFromDB,
+  getTrainingProgramsByUserFromDB,
   getTrainingProgramByIdFromDB,
   updateTrainingProgramIntoDB,
   deleteTrainingProgramFromDB,

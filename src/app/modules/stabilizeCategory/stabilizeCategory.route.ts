@@ -18,7 +18,7 @@ router.post(
 router.get(
   '/',
   auth('trainer', 'user'),
-  StabilizeCategoryControllers.getStabilizeCategoriesByTrainer,
+  StabilizeCategoryControllers.getStabilizeCategoriesByUser,
 );
 
 router.get(

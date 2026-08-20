@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 const createStabilizeCategoryValidationSchema = z.object({
   body: z.object({
+    user: z.string({
+      required_error: 'User ID is required',
+      invalid_type_error: 'User ID must be a string',
+    }),
     name: z
       .string({
         required_error: 'Category name is required',

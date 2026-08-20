@@ -23,17 +23,17 @@ const createTrainingProgram = catchAsync(
   },
 );
 
-const getTrainingProgramsByTrainer = catchAsync(
+const getTrainingProgramsByUser = catchAsync(
   async (req: Request, res: Response) => {
-    const trainerId = req.user.userId;
+    const userId = req.query.user as string;
 
-    if (!trainerId) {
-      throw new AppError(400, 'Trainer ID is required');
+    if (!userId) {
+      throw new AppError(400, 'User ID is required');
     }
 
     const result =
-      await TrainingProgramServices.getTrainingProgramsByTrainerFromDB(
-        trainerId,
+      await TrainingProgramServices.getTrainingProgramsByUserFromDB(
+        userId,
         req.query,
       );
 
@@ -96,7 +96,7 @@ const deleteTrainingProgram = catchAsync(
 
 export const TrainingProgramControllers = {
   createTrainingProgram,
-  getTrainingProgramsByTrainer,
+  getTrainingProgramsByUser,
   getTrainingProgramById,
   updateTrainingProgram,
   deleteTrainingProgram,

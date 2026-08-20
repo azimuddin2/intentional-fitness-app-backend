@@ -120,10 +120,8 @@ const weeklyJournalSchema = new Schema<TWeeklyJournal>(
   },
 );
 
-// akta client-er duita week number duplicate hote parbe na
 weeklyJournalSchema.index({ client: 1, weekNumber: 1 }, { unique: true });
 
-// current week khujar jonno druto query
 weeklyJournalSchema.index({ client: 1, isCurrent: 1 });
 
 export const WeeklyJournal = model<TWeeklyJournal>(

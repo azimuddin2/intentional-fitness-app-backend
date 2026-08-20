@@ -18,7 +18,7 @@ router.post(
 router.get(
   '/',
   auth('trainer', 'user'),
-  TrainingProgramControllers.getTrainingProgramsByTrainer,
+  TrainingProgramControllers.getTrainingProgramsByUser,
 );
 
 router.get(
