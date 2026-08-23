@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { TNews } from './news.interface';
+import { TNews } from './goals.interface';
 
 const NewsSchema = new Schema<TNews>(
   {

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { NewsServices } from './news.service';
+import { NewsServices } from './goals.service';
 
 const createNews = catchAsync(async (req: Request, res: Response) => {
   const result = await NewsServices.createNewsIntoDB(req.body, req.file);

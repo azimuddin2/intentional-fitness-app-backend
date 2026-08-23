@@ -3,8 +3,8 @@ import validateRequest from '../../middlewares/validateRequest';
 import auth from '../../middlewares/auth';
 import multer, { memoryStorage } from 'multer';
 import parseData from '../../middlewares/parseData';
-import { NewsValidations } from './news.validation';
-import { NewsControllers } from './news.controller';
+import { NewsValidations } from './goals.validation';
+import { NewsControllers } from './goals.controller';
 
 const router = express.Router();
 const upload = multer({ storage: memoryStorage() });

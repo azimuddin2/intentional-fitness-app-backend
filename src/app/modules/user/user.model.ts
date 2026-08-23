@@ -34,14 +34,14 @@ const userSchema = new Schema<TUser, UserModel>(
       unique: true,
       sparse: true,
       default: null,
-      validate: {
-        validator: function (v) {
-          if (!v) return true;
-          return /^\+[1-9]\d{7,14}$/.test(v);
-        },
-        message: (props) =>
-          `${props.value} is not a valid international phone number`,
-      },
+      // validate: {
+      //   validator: function (v) {
+      //     if (!v) return true;
+      //     return /^\+[1-9]\d{7,14}$/.test(v);
+      //   },
+      //   message: (props) =>
+      //     `${props.value} is not a valid international phone number`,
+      // },
     },
     password: {
       type: String,

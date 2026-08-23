@@ -1,9 +1,9 @@
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { deleteFromS3, uploadToS3 } from '../../utils/awsS3FileUploader';
-import { TNews } from './news.interface';
-import { News } from './news.model';
-import { newsSearchableFields } from './news.constant';
+import { TNews } from './goals.interface';
+import { News } from './goals.model';
+import { newsSearchableFields } from './goals.constant';
 
 const createNewsIntoDB = async (payload: TNews, file: any) => {
   // 1. Check if news exists but ignore soft deleted
