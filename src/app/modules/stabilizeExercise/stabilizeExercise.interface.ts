@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongoose';
 import { TUser } from '../user/user.interface';
+import { TStabilizeCategory } from '../stabilizeCategory/stabilizeCategory.interface';
 
 export type TVideo = {
   url: string;
@@ -18,7 +19,7 @@ export type TStabilizeExercise = {
   trainer: ObjectId | TUser;
   user: ObjectId | TUser;
   isPublic: boolean;
-  category: ObjectId;
+  category: ObjectId | TStabilizeCategory;
 
   name: string;
   description: string;
