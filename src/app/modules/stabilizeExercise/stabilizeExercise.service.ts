@@ -1,6 +1,7 @@
 import AppError from '../../errors/AppError';
 import { UploadedFiles } from '../../interface/common.interface';
 import { deleteFromS3, uploadManyToS3 } from '../../utils/awsS3FileUploader';
+import { StabilizeCategory } from '../stabilizeCategory/stabilizeCategory.model';
 import { TStabilizeExercise } from './stabilizeExercise.interface';
 import { StabilizeExercise } from './stabilizeExercise.model';
 
@@ -13,11 +14,16 @@ const createStabilizeExerciseIntoDB = async (
     throw new AppError(400, 'User is required when exercise is not public');
   }
 
+  const isCategoryExists = await StabilizeCategory.findById(payload.category);
+  if (!isCategoryExists) {
+    throw new AppError(404, 'Stabilize Exercise not found');
+  }
+
   const isExerciseExists = await StabilizeExercise.findOne({
-    name: payload.name,
+    title: payload.title,
     trainer: trainerId,
     user: payload.isPublic ? null : payload.user,
-    category: payload.category,
+    category: isCategoryExists._id,
     isDeleted: false,
   });
 
@@ -74,7 +80,7 @@ const getStabilizeExercisesForClientFromDB = async (
     isDeleted: false,
     $or: [{ user: clientId }, { isPublic: true }],
   })
-    .populate('category', 'name')
+    .populate('category', 'title')
     .sort({ createdAt: -1 });
 
   return result;
@@ -105,9 +111,9 @@ const updateStabilizeExerciseIntoDB = async (
   if (isExerciseExists.isDeleted)
     throw new AppError(400, 'This stabilize exercise has been deleted');
 
-  if (payload.name && payload.name !== isExerciseExists.name) {
+  if (payload.title && payload.title !== isExerciseExists.title) {
     const isDuplicateName = await StabilizeExercise.findOne({
-      name: payload.name,
+      name: payload.title,
       trainer: isExerciseExists.trainer,
       user: isExerciseExists.user,
       category: isExerciseExists.category,
@@ -115,7 +121,7 @@ const updateStabilizeExerciseIntoDB = async (
     });
 
     if (isDuplicateName) {
-      throw new AppError(400, 'Exercise name already exists in this category');
+      throw new AppError(400, 'Exercise title already exists in this category');
     }
   }
 

@@ -7,10 +7,10 @@ import { PrivacyRoutes } from '../modules/privacy/privacy.route';
 import { AboutRoutes } from '../modules/about/about.route';
 import { SupportRoutes } from '../modules/support/support.route';
 import { NotificationRoutes } from '../modules/notification/notification.route';
-import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 import { StabilizeCategoryRoutes } from '../modules/stabilizeCategory/stabilizeCategory.route';
 import { TrainingProgramRoutes } from '../modules/trainingProgram/trainingProgram.route';
 import { WeeklyJournalTaskRoutes } from '../modules/weeklyJournalTask/weeklyJournalTask.route';
+import { StabilizeExerciseRoutes } from '../modules/stabilizeExercise/stabilizeExercise.route';
 
 const router = Router();
 
@@ -52,16 +52,17 @@ const moduleRoutes = [
     route: StabilizeCategoryRoutes,
   },
   {
+    path: '/stabilize-exercise',
+    route: StabilizeExerciseRoutes,
+  },
+
+  {
     path: '/training-programs',
     route: TrainingProgramRoutes,
   },
   {
     path: '/weekly-journal-tasks',
     route: WeeklyJournalTaskRoutes,
-  },
-  {
-    path: '/dashboard',
-    route: DashboardRoutes,
   },
 ];
 

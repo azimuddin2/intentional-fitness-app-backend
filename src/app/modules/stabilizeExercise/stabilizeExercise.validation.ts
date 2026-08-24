@@ -44,13 +44,13 @@ const createStabilizeExerciseValidationSchema = z.object({
       required_error: 'Category ID is required',
       invalid_type_error: 'Category ID must be a string',
     }),
-    name: z
+    title: z
       .string({
-        required_error: 'Exercise name is required',
-        invalid_type_error: 'Exercise name must be a string',
+        required_error: 'Exercise title is required',
+        invalid_type_error: 'Exercise title must be a string',
       })
-      .min(2, 'Exercise name must be at least 2 characters')
-      .max(50, 'Exercise name cannot exceed 50 characters')
+      .min(2, 'Exercise title must be at least 2 characters')
+      .max(50, 'Exercise title cannot exceed 50 characters')
       .trim(),
     description: z
       .string({

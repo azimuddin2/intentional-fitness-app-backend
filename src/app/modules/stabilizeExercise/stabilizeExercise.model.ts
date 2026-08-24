@@ -52,7 +52,7 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
       ref: 'StabilizeCategory',
       required: true,
     },
-    name: {
+    title: {
       type: String,
       required: true,
       trim: true,
@@ -91,7 +91,7 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
       type: Number,
       required: true,
       min: 0,
-      max: 10,
+      max: 5,
     },
     sets: {
       type: [setSchema],

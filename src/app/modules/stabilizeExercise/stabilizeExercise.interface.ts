@@ -8,10 +8,10 @@ export type TVideo = {
 };
 
 export type TSet = {
-  weight?: string;
-  reps?: number;
-  time?: string;
-  rest?: string;
+  weight: string;
+  reps: number;
+  time: string;
+  rest: string;
 };
 
 export type TStabilizeExercise = {
@@ -21,7 +21,7 @@ export type TStabilizeExercise = {
   isPublic: boolean;
   category: ObjectId | TStabilizeCategory;
 
-  name: string;
+  title: string;
   description: string;
   video: TVideo;
 
