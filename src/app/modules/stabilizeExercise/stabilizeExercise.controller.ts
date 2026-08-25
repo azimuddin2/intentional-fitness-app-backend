@@ -31,6 +31,7 @@ const getStabilizeExercisesForClient = catchAsync(
       await StabilizeExerciseServices.getStabilizeExercisesForClientFromDB(
         clientId,
         categoryId,
+        req.query,
       );
 
     sendResponse(res, {

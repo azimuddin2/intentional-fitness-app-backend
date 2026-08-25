@@ -19,17 +19,6 @@ const setValidationSchema = z.object({
   }),
 });
 
-const videoValidationSchema = z.object({
-  url: z.string({
-    required_error: 'Video URL is required',
-    invalid_type_error: 'Video URL must be a string',
-  }),
-  key: z.string({
-    required_error: 'Video key is required',
-    invalid_type_error: 'Video key must be a string',
-  }),
-});
-
 const createStabilizeExerciseValidationSchema = z.object({
   body: z.object({
     user: z.string({
@@ -59,7 +48,6 @@ const createStabilizeExerciseValidationSchema = z.object({
       })
       .min(2, 'Description must be at least 2 characters')
       .trim(),
-    video: videoValidationSchema,
     equipment: z
       .string({
         required_error: 'Equipment is required',
@@ -84,18 +72,31 @@ const createStabilizeExerciseValidationSchema = z.object({
         invalid_type_error: 'Training notes must be a string',
       })
       .trim(),
-    rpe: z
-      .number({
-        required_error: 'Rate of Perceived Exertion is required',
-        invalid_type_error: 'RPE must be a number',
+    workFeelIntention: z
+      .string({
+        required_error: 'Work feel intention is required',
+        invalid_type_error: 'Work feel intention must be a string',
       })
-      .min(0, 'RPE cannot be less than 0')
-      .max(10, 'RPE cannot exceed 10'),
+      .trim(),
     sets: z
       .array(setValidationSchema, {
         required_error: 'At least one set is required',
       })
       .min(1, 'At least one set is required'),
+    ratePerceivedExertion: z
+      .number({
+        invalid_type_error: 'Rate of Perceived Exertion must be a number',
+      })
+      .min(1, 'Rate of Perceived Exertion cannot be less than 1')
+      .max(5, 'Rate of Perceived Exertion cannot exceed 5')
+      .optional(),
+    clientFeedback: z
+      .string({ invalid_type_error: 'Client feedback must be a string' })
+      .trim()
+      .optional(),
+    isCompleted: z
+      .boolean({ invalid_type_error: 'isCompleted must be a boolean' })
+      .optional(),
   }),
 });
 
@@ -107,10 +108,10 @@ const updateStabilizeExerciseValidationSchema = z.object({
     category: z
       .string({ invalid_type_error: 'Category ID must be a string' })
       .optional(),
-    name: z
-      .string({ invalid_type_error: 'Exercise name must be a string' })
-      .min(2, 'Exercise name must be at least 2 characters')
-      .max(50, 'Exercise name cannot exceed 50 characters')
+    title: z
+      .string({ invalid_type_error: 'Exercise title must be a string' })
+      .min(2, 'Exercise title must be at least 2 characters')
+      .max(50, 'Exercise title cannot exceed 50 characters')
       .trim()
       .optional(),
     description: z
@@ -118,7 +119,6 @@ const updateStabilizeExerciseValidationSchema = z.object({
       .min(2, 'Description must be at least 2 characters')
       .trim()
       .optional(),
-    video: videoValidationSchema.optional(),
     equipment: z
       .string({ invalid_type_error: 'Equipment must be a string' })
       .trim()
@@ -135,10 +135,9 @@ const updateStabilizeExerciseValidationSchema = z.object({
       .string({ invalid_type_error: 'Training notes must be a string' })
       .trim()
       .optional(),
-    rpe: z
-      .number({ invalid_type_error: 'RPE must be a number' })
-      .min(0, 'RPE cannot be less than 0')
-      .max(10, 'RPE cannot exceed 10')
+    workFeelIntention: z
+      .string({ invalid_type_error: 'Work feel intention must be a string' })
+      .trim()
       .optional(),
     sets: z
       .array(setValidationSchema)
@@ -147,7 +146,24 @@ const updateStabilizeExerciseValidationSchema = z.object({
   }),
 });
 
+const updateClientFeedbackValidationSchema = z.object({
+  body: z.object({
+    ratePerceivedExertion: z
+      .number({
+        invalid_type_error: 'Rate of Perceived Exertion must be a number',
+      })
+      .min(1, 'Rate of Perceived Exertion cannot be less than 1')
+      .max(5, 'Rate of Perceived Exertion cannot exceed 5')
+      .optional(),
+    clientFeedback: z
+      .string({ invalid_type_error: 'Client feedback must be a string' })
+      .trim()
+      .optional(),
+  }),
+});
+
 export const StabilizeExerciseValidations = {
   createStabilizeExerciseValidationSchema,
   updateStabilizeExerciseValidationSchema,
+  updateClientFeedbackValidationSchema,
 };

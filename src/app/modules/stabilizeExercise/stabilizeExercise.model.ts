@@ -66,7 +66,6 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
       type: videoSchema,
       required: true,
     },
-
     equipment: {
       type: String,
       required: true,
@@ -87,11 +86,10 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
       required: true,
       trim: true,
     },
-    rpe: {
-      type: Number,
+    workFeelIntention: {
+      type: String,
       required: true,
-      min: 0,
-      max: 5,
+      trim: true,
     },
     sets: {
       type: [setSchema],
@@ -101,7 +99,23 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
         message: 'At least one set is required',
       },
     },
-    isDeleted: { type: Boolean, default: false },
+    ratePerceivedExertion: {
+      type: Number,
+      min: 1,
+      max: 5,
+    },
+    clientFeedback: {
+      type: String,
+      trim: true,
+    },
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

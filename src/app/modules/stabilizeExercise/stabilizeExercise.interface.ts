@@ -29,9 +29,12 @@ export type TStabilizeExercise = {
   duration: string;
   frequency: string;
   trainingNotes: string;
-  rpe: number;
-
+  workFeelIntention: string;
   sets: TSet[];
+
+  ratePerceivedExertion: number;
+  clientFeedback: string;
+  isCompleted: boolean;
 
   isDeleted: boolean;
 };

@@ -1,9 +1,11 @@
+import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
 import { UploadedFiles } from '../../interface/common.interface';
 import { deleteFromS3, uploadManyToS3 } from '../../utils/awsS3FileUploader';
 import { StabilizeCategory } from '../stabilizeCategory/stabilizeCategory.model';
 import { TStabilizeExercise } from './stabilizeExercise.interface';
 import { StabilizeExercise } from './stabilizeExercise.model';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 const createStabilizeExerciseIntoDB = async (
   trainerId: string,
@@ -11,12 +13,17 @@ const createStabilizeExerciseIntoDB = async (
   files: any,
 ) => {
   if (!payload.isPublic && !payload.user) {
-    throw new AppError(400, 'User is required when exercise is not public');
+    throw new AppError(400, 'User ID is required for a non-public exercise');
   }
 
-  const isCategoryExists = await StabilizeCategory.findById(payload.category);
+  const isCategoryExists = await StabilizeCategory.findOne({
+    _id: payload.category,
+    trainer: trainerId,
+    isDeleted: false,
+  });
+
   if (!isCategoryExists) {
-    throw new AppError(404, 'Stabilize Exercise not found');
+    throw new AppError(404, 'Stabilize Category not found');
   }
 
   const isExerciseExists = await StabilizeExercise.findOne({
@@ -49,13 +56,11 @@ const createStabilizeExerciseIntoDB = async (
 
       try {
         const uploaded = await uploadManyToS3(videoArray);
-        payload.video = uploaded[0]; // single video — take first element
+        payload.video = uploaded[0];
       } catch (error) {
         throw new AppError(500, 'Video upload failed');
       }
     }
-  } else {
-    throw new AppError(404, 'Exercise video is required');
   }
 
   const result = await StabilizeExercise.create({
@@ -74,27 +79,48 @@ const createStabilizeExerciseIntoDB = async (
 const getStabilizeExercisesForClientFromDB = async (
   clientId: string,
   categoryId: string,
+  query: Record<string, unknown>,
 ) => {
-  const result = await StabilizeExercise.find({
-    category: categoryId,
-    isDeleted: false,
-    $or: [{ user: clientId }, { isPublic: true }],
-  })
-    .populate('category', 'title')
-    .sort({ createdAt: -1 });
+  if (!clientId || !mongoose.Types.ObjectId.isValid(clientId)) {
+    throw new AppError(400, 'Invalid client ID');
+  }
 
-  return result;
+  if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
+    throw new AppError(400, 'Invalid category ID');
+  }
+
+  const stabilizeExerciseQuery = new QueryBuilder(
+    StabilizeExercise.find({
+      category: categoryId,
+      isDeleted: false,
+      $or: [{ user: clientId }, { isPublic: true }],
+    }).populate('category', 'title'),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await stabilizeExerciseQuery.countTotal();
+  const result = await stabilizeExerciseQuery.modelQuery;
+
+  return { meta, result };
 };
 
 const getStabilizeExerciseByIdFromDB = async (id: string) => {
   const result = await StabilizeExercise.findById(id).populate(
     'category',
-    'name',
+    'title',
   );
 
-  if (!result) throw new AppError(404, 'Stabilize exercise not found');
-  if (result.isDeleted)
+  if (!result) {
+    throw new AppError(404, 'Stabilize exercise not found');
+  }
+
+  if (result.isDeleted) {
     throw new AppError(400, 'This stabilize exercise has been deleted');
+  }
 
   return result;
 };
