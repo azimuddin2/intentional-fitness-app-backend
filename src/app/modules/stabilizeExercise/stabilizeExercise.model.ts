@@ -39,13 +39,7 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: function (this: TStabilizeExercise) {
-        return !this.isPublic;
-      },
-    },
-    isPublic: {
-      type: Boolean,
-      default: false,
+      required: true,
     },
     category: {
       type: Schema.Types.ObjectId,
@@ -103,6 +97,7 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
       type: Number,
       min: 1,
       max: 5,
+      default: null,
     },
     clientFeedback: {
       type: String,

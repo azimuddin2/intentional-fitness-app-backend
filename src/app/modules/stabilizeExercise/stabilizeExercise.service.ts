@@ -12,8 +12,8 @@ const createStabilizeExerciseIntoDB = async (
   payload: TStabilizeExercise,
   files: any,
 ) => {
-  if (!payload.isPublic && !payload.user) {
-    throw new AppError(400, 'User ID is required for a non-public exercise');
+  if (!payload.user) {
+    throw new AppError(400, 'User ID is required');
   }
 
   const isCategoryExists = await StabilizeCategory.findOne({
@@ -29,7 +29,7 @@ const createStabilizeExerciseIntoDB = async (
   const isExerciseExists = await StabilizeExercise.findOne({
     title: payload.title,
     trainer: trainerId,
-    user: payload.isPublic ? null : payload.user,
+    user: payload.user,
     category: isCategoryExists._id,
     isDeleted: false,
   });
@@ -66,7 +66,6 @@ const createStabilizeExerciseIntoDB = async (
   const result = await StabilizeExercise.create({
     ...payload,
     trainer: trainerId,
-    user: payload.isPublic ? undefined : payload.user,
   });
 
   if (!result) {
@@ -94,7 +93,7 @@ const getStabilizeExercisesForClientFromDB = async (
       category: categoryId,
       isDeleted: false,
       $or: [{ user: clientId }, { isPublic: true }],
-    }).populate('category', 'title'),
+    }),
     query,
   )
     .filter()
@@ -109,10 +108,7 @@ const getStabilizeExercisesForClientFromDB = async (
 };
 
 const getStabilizeExerciseByIdFromDB = async (id: string) => {
-  const result = await StabilizeExercise.findById(id).populate(
-    'category',
-    'title',
-  );
+  const result = await StabilizeExercise.findById(id);
 
   if (!result) {
     throw new AppError(404, 'Stabilize exercise not found');
@@ -139,7 +135,7 @@ const updateStabilizeExerciseIntoDB = async (
 
   if (payload.title && payload.title !== isExerciseExists.title) {
     const isDuplicateName = await StabilizeExercise.findOne({
-      name: payload.title,
+      title: payload.title,
       trainer: isExerciseExists.trainer,
       user: isExerciseExists.user,
       category: isExerciseExists.category,
@@ -166,10 +162,6 @@ const updateStabilizeExerciseIntoDB = async (
         throw new AppError(500, 'Video update failed');
       }
     }
-  }
-
-  if (payload.isPublic === true) {
-    payload.user = undefined;
   }
 
   try {

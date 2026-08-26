@@ -18,7 +18,6 @@ export type TStabilizeExercise = {
   _id: ObjectId;
   trainer: ObjectId | TUser;
   user: ObjectId | TUser;
-  isPublic: boolean;
   category: ObjectId | TStabilizeCategory;
 
   title: string;

@@ -25,10 +25,6 @@ const createStabilizeExerciseValidationSchema = z.object({
       required_error: 'User ID is required',
       invalid_type_error: 'User ID must be a string',
     }),
-    isPublic: z.boolean({
-      required_error: 'isPublic is required',
-      invalid_type_error: 'isPublic must be a boolean',
-    }),
     category: z.string({
       required_error: 'Category ID is required',
       invalid_type_error: 'Category ID must be a string',
@@ -102,9 +98,6 @@ const createStabilizeExerciseValidationSchema = z.object({
 
 const updateStabilizeExerciseValidationSchema = z.object({
   body: z.object({
-    isPublic: z
-      .boolean({ invalid_type_error: 'isPublic must be a boolean' })
-      .optional(),
     category: z
       .string({ invalid_type_error: 'Category ID must be a string' })
       .optional(),

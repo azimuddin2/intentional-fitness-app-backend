@@ -43,7 +43,7 @@ const getStabilizeCategoriesByUserFromDB = async (
     StabilizeCategory.find({
       user: userId,
       isDeleted: false,
-    }).populate('user', 'name email'),
+    }),
     query,
   )
     .filter()
