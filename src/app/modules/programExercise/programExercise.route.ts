@@ -18,7 +18,7 @@ const upload = multer({
 router.post(
   '/',
   auth('trainer'),
-  upload.fields([{ name: 'image', maxCount: 1 }]),
+  upload.single('image'),
   parseData(),
   validateRequest(
     ProgramExerciseValidations.createProgramExerciseValidationSchema,
@@ -32,12 +32,16 @@ router.get(
   ProgramExerciseControllers.getProgramExercisesForClient,
 );
 
-router.get('/:id', ProgramExerciseControllers.getProgramExerciseById);
+router.get(
+  '/:id',
+  auth('trainer', 'user'),
+  ProgramExerciseControllers.getProgramExerciseById,
+);
 
 router.patch(
   '/:id',
   auth('trainer'),
-  upload.fields([{ name: 'image', maxCount: 1 }]),
+  upload.single('image'),
   parseData(),
   validateRequest(
     ProgramExerciseValidations.updateProgramExerciseValidationSchema,

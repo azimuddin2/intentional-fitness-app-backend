@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { TProgramExercise, TSet, TImage } from './programExercise.interface';
+import { TProgramExercise, TSet } from './programExercise.interface';
 
 const setSchema = new Schema<TSet>(
   {
@@ -16,20 +16,6 @@ const setSchema = new Schema<TSet>(
       required: true,
     },
     rest: {
-      type: String,
-      required: true,
-    },
-  },
-  { _id: false },
-);
-
-const imageSchema = new Schema<TImage>(
-  {
-    url: {
-      type: String,
-      required: true,
-    },
-    key: {
       type: String,
       required: true,
     },
@@ -98,12 +84,13 @@ const programExerciseSchema = new Schema<TProgramExercise>(
       trim: true,
     },
     image: {
-      type: imageSchema,
-      required: false,
+      type: String,
+      required: true,
+      trim: true,
     },
     video: {
       type: String,
-      required: false,
+      required: true,
       trim: true,
     },
     ratePerceivedExertion: {

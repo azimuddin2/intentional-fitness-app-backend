@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
-import { UploadedFiles } from '../../interface/common.interface';
-import { deleteFromS3, uploadManyToS3 } from '../../utils/awsS3FileUploader';
+import { deleteFromS3, uploadToS3 } from '../../utils/awsS3FileUploader';
 import { TrainingProgram } from '../trainingProgram/trainingProgram.model';
 import { TProgramExercise } from './programExercise.interface';
 import { ProgramExercise } from './programExercise.model';
@@ -10,7 +9,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 const createProgramExerciseIntoDB = async (
   trainerId: string,
   payload: TProgramExercise,
-  files: any,
+  file: File,
 ) => {
   const isProgramExists = await TrainingProgram.findOne({
     _id: payload.program,
@@ -35,18 +34,15 @@ const createProgramExerciseIntoDB = async (
     throw new AppError(400, 'This exercise already exists in this program');
   }
 
-  if (files) {
-    const { image } = files as UploadedFiles;
-    if (image?.length) {
-      try {
-        const uploaded = await uploadManyToS3([
-          { file: image[0], path: `images/programExercise` },
-        ]);
-        payload.image = uploaded[0];
-      } catch (error) {
-        throw new AppError(500, 'Image upload failed');
-      }
-    }
+  if (file) {
+    const uploadedUrl = await uploadToS3({
+      file,
+      fileName: `images/program/exercise/${Date.now()}-${Math.floor(
+        1000 + Math.random() * 9000,
+      )}`,
+    });
+
+    payload.image = uploadedUrl;
   }
 
   const result = await ProgramExercise.create({
@@ -55,7 +51,10 @@ const createProgramExerciseIntoDB = async (
     program: isProgramExists._id,
   });
 
-  if (!result) throw new AppError(400, 'Failed to create program exercise');
+  if (!result) {
+    throw new AppError(400, 'Failed to create program exercise');
+  }
+
   return result;
 };
 
@@ -108,40 +107,49 @@ const getProgramExerciseByIdFromDB = async (id: string) => {
 const updateProgramExerciseIntoDB = async (
   id: string,
   payload: Partial<TProgramExercise>,
-  files: any,
+  file: File,
 ) => {
   const isExerciseExists = await ProgramExercise.findById(id);
-  if (!isExerciseExists)
-    throw new AppError(404, 'Program exercise does not exist');
-  if (isExerciseExists.isDeleted)
-    throw new AppError(400, 'This program exercise has been deleted');
 
+  if (!isExerciseExists) {
+    throw new AppError(404, 'Stabilize exercise does not exist');
+  }
+
+  if (isExerciseExists.isDeleted) {
+    throw new AppError(400, 'This stabilize exercise has been deleted');
+  }
+
+  // Check duplicate exercise title
   if (payload.title && payload.title !== isExerciseExists.title) {
-    const isDuplicateTitle = await ProgramExercise.findOne({
+    const isDuplicateName = await ProgramExercise.findOne({
       title: payload.title,
       trainer: isExerciseExists.trainer,
       user: isExerciseExists.user,
       program: isExerciseExists.program,
       isDeleted: false,
+      _id: { $ne: id },
     });
-    if (isDuplicateTitle)
+
+    if (isDuplicateName) {
       throw new AppError(400, 'Exercise title already exists in this program');
+    }
   }
 
-  if (files) {
-    const { image } = files as UploadedFiles;
-    if (image?.length) {
-      try {
-        if (isExerciseExists.image?.key)
-          await deleteFromS3(isExerciseExists.image.key);
-        const uploaded = await uploadManyToS3([
-          { file: image[0], path: `images/programExercise` },
-        ]);
-        payload.image = uploaded[0];
-      } catch (error) {
-        throw new AppError(500, 'Image update failed');
-      }
+  // 📸 Step 2: Handle image upload
+  if (file) {
+    const uploadedUrl = await uploadToS3({
+      file,
+      fileName: `images/program/exercise/${Date.now()}-${Math.floor(
+        1000 + Math.random() * 9000,
+      )}`,
+    });
+
+    // 🧹 Delete old image if exists
+    if (isExerciseExists.image) {
+      await deleteFromS3(isExerciseExists.image);
     }
+
+    payload.image = uploadedUrl;
   }
 
   try {
@@ -153,12 +161,14 @@ const updateProgramExerciseIntoDB = async (
         runValidators: true,
       },
     );
-    if (!updatedExercise)
-      throw new AppError(400, 'Program exercise update failed');
+
+    if (!updatedExercise) {
+      throw new AppError(400, 'Stabilize exercise update failed');
+    }
+
     return updatedExercise;
   } catch (error: any) {
-    console.error('updateProgramExerciseIntoDB Error:', error);
-    throw new AppError(500, 'Failed to update program exercise');
+    throw new AppError(500, error.message || 'User profile update failed');
   }
 };
 
@@ -187,9 +197,13 @@ const updateClientFeedbackIntoDB = async (
 
 const deleteProgramExerciseFromDB = async (id: string) => {
   const isExerciseExists = await ProgramExercise.findById(id);
-  if (!isExerciseExists) throw new AppError(404, 'Program exercise not found');
-  if (isExerciseExists.isDeleted)
+
+  if (!isExerciseExists) {
+    throw new AppError(404, 'Program exercise not found');
+  }
+  if (isExerciseExists.isDeleted) {
     throw new AppError(400, 'Program exercise is already deleted');
+  }
 
   const result = await ProgramExercise.findByIdAndUpdate(
     id,

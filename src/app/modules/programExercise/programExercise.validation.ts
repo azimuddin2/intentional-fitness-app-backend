@@ -28,22 +28,6 @@ const setValidationSchema = z.object({
     .trim(),
 });
 
-const imageValidationSchema = z.object({
-  url: z
-    .string({
-      required_error: 'Image URL is required',
-      invalid_type_error: 'Image URL must be a string',
-    })
-    .trim(),
-
-  key: z
-    .string({
-      required_error: 'Image key is required',
-      invalid_type_error: 'Image key must be a string',
-    })
-    .trim(),
-});
-
 const createProgramExerciseValidationSchema = z.object({
   body: z.object({
     user: z
@@ -119,14 +103,12 @@ const createProgramExerciseValidationSchema = z.object({
       })
       .trim(),
 
-    image: imageValidationSchema.optional(),
-
     video: z
       .string({
+        required_error: 'Video URL is required',
         invalid_type_error: 'Video URL must be a string',
       })
-      .trim()
-      .optional(),
+      .trim(),
 
     ratePerceivedExertion: z
       .number({
@@ -211,8 +193,6 @@ const updateProgramExerciseValidationSchema = z.object({
       })
       .trim()
       .optional(),
-
-    image: imageValidationSchema.optional(),
 
     video: z
       .string({
