@@ -39,29 +39,29 @@ const createStabilizeExerciseIntoDB = async (
   }
 
   // Handle single video upload to S3
-  if (files) {
-    const { video } = files as UploadedFiles;
+  //   if (files) {
+  //     const { video } = files as UploadedFiles;
 
-    if (!video?.length) {
-      throw new AppError(404, 'Exercise video is required');
-    }
+  //     if (!video?.length) {
+  //       throw new AppError(404, 'Exercise video is required');
+  //     }
 
-    if (video?.length) {
-      const videoArray = [
-        {
-          file: video[0],
-          path: `videos/exercise`,
-        },
-      ];
+  //     if (video?.length) {
+  //       const videoArray = [
+  //         {
+  //           file: video[0],
+  //           path: `videos/exercise`,
+  //         },
+  //       ];
 
-      try {
-        const uploaded = await uploadManyToS3(videoArray);
-        payload.video = uploaded[0];
-      } catch (error) {
-        throw new AppError(500, 'Video upload failed');
-      }
-    }
-  }
+  //       try {
+  //         const uploaded = await uploadManyToS3(videoArray);
+  //         payload.video = uploaded[0];
+  //       } catch (error) {
+  //         throw new AppError(500, 'Video upload failed');
+  //       }
+  //     }
+  //   }
 
   const result = await StabilizeExercise.create({
     ...payload,
@@ -92,7 +92,7 @@ const getStabilizeExercisesForClientFromDB = async (
     StabilizeExercise.find({
       category: categoryId,
       isDeleted: false,
-      $or: [{ user: clientId }, { isPublic: true }],
+      user: clientId,
     }),
     query,
   )

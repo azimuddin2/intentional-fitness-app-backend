@@ -1,14 +1,26 @@
 import { ObjectId } from 'mongoose';
-
 import { TUser } from '../user/user.interface';
+import { TTrainingProgram } from '../trainingProgram/trainingProgram.interface';
+
+export type TSet = {
+  weight: string;
+  reps: number;
+  time: string;
+  rest: string;
+};
+
+export type TImage = {
+  url: string;
+  key: string;
+};
 
 export type TProgramExercise = {
   _id: ObjectId;
   trainer: ObjectId | TUser;
   user: ObjectId | TUser;
-  isPublic: boolean;
+  program: ObjectId | TTrainingProgram;
 
-  name: string;
+  title: string;
   colour: string;
   description: string;
 
@@ -16,14 +28,16 @@ export type TProgramExercise = {
   workFeelIntention: string;
   trainingNotes: string;
 
-  weight: string;
-  reps: number;
-  time: string;
+  sets: TSet[];
 
   frequency: string;
 
-  image?: string;
+  image?: TImage;
   video?: string;
+
+  ratePerceivedExertion?: number;
+  clientFeedback?: string;
+  isCompleted: boolean;
 
   isDeleted: boolean;
 };

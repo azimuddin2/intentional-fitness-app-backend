@@ -1,24 +1,72 @@
 import { z } from 'zod';
 
+const setValidationSchema = z.object({
+  weight: z
+    .string({
+      required_error: 'Weight is required',
+      invalid_type_error: 'Weight must be a string',
+    })
+    .trim(),
+
+  reps: z.number({
+    required_error: 'Reps is required',
+    invalid_type_error: 'Reps must be a number',
+  }),
+
+  time: z
+    .string({
+      required_error: 'Time is required',
+      invalid_type_error: 'Time must be a string',
+    })
+    .trim(),
+
+  rest: z
+    .string({
+      required_error: 'Rest is required',
+      invalid_type_error: 'Rest must be a string',
+    })
+    .trim(),
+});
+
+const imageValidationSchema = z.object({
+  url: z
+    .string({
+      required_error: 'Image URL is required',
+      invalid_type_error: 'Image URL must be a string',
+    })
+    .trim(),
+
+  key: z
+    .string({
+      required_error: 'Image key is required',
+      invalid_type_error: 'Image key must be a string',
+    })
+    .trim(),
+});
+
 const createProgramExerciseValidationSchema = z.object({
   body: z.object({
-    user: z.string({
-      required_error: 'User ID is required',
-      invalid_type_error: 'User ID must be a string',
-    }),
-
-    isPublic: z.boolean({
-      required_error: 'isPublic is required',
-      invalid_type_error: 'isPublic must be a boolean',
-    }),
-
-    name: z
+    user: z
       .string({
-        required_error: 'Exercise name is required',
-        invalid_type_error: 'Exercise name must be a string',
+        required_error: 'User ID is required',
+        invalid_type_error: 'User ID must be a string',
       })
-      .min(2, 'Exercise name must be at least 2 characters')
-      .max(50, 'Exercise name cannot exceed 50 characters')
+      .trim(),
+
+    program: z
+      .string({
+        required_error: 'Program ID is required',
+        invalid_type_error: 'Program ID must be a string',
+      })
+      .trim(),
+
+    title: z
+      .string({
+        required_error: 'Exercise title is required',
+        invalid_type_error: 'Exercise title must be a string',
+      })
+      .min(2, 'Exercise title must be at least 2 characters')
+      .max(100, 'Exercise title cannot exceed 100 characters')
       .trim(),
 
     colour: z
@@ -57,24 +105,12 @@ const createProgramExerciseValidationSchema = z.object({
       })
       .trim(),
 
-    weight: z
-      .string({
-        required_error: 'Weight is required',
-        invalid_type_error: 'Weight must be a string',
+    sets: z
+      .array(setValidationSchema, {
+        required_error: 'Sets are required',
+        invalid_type_error: 'Sets must be an array',
       })
-      .trim(),
-
-    reps: z.number({
-      required_error: 'Reps is required',
-      invalid_type_error: 'Reps must be a number',
-    }),
-
-    time: z
-      .string({
-        required_error: 'Time is required',
-        invalid_type_error: 'Time must be a string',
-      })
-      .trim(),
+      .min(1, 'At least one set is required'),
 
     frequency: z
       .string({
@@ -83,12 +119,7 @@ const createProgramExerciseValidationSchema = z.object({
       })
       .trim(),
 
-    image: z
-      .string({
-        invalid_type_error: 'Image must be a string',
-      })
-      .trim()
-      .optional(),
+    image: imageValidationSchema.optional(),
 
     video: z
       .string({
@@ -96,23 +127,38 @@ const createProgramExerciseValidationSchema = z.object({
       })
       .trim()
       .optional(),
+
+    ratePerceivedExertion: z
+      .number({
+        invalid_type_error: 'Rate perceived exertion must be a number',
+      })
+      .min(1, 'Rate perceived exertion must be at least 1')
+      .max(5, 'Rate perceived exertion cannot exceed 5')
+      .optional(),
+
+    clientFeedback: z
+      .string({
+        invalid_type_error: 'Client feedback must be a string',
+      })
+      .trim()
+      .optional(),
+
+    isCompleted: z
+      .boolean({
+        invalid_type_error: 'isCompleted must be a boolean',
+      })
+      .optional(),
   }),
 });
 
 const updateProgramExerciseValidationSchema = z.object({
   body: z.object({
-    isPublic: z
-      .boolean({
-        invalid_type_error: 'isPublic must be a boolean',
-      })
-      .optional(),
-
-    name: z
+    title: z
       .string({
-        invalid_type_error: 'Exercise name must be a string',
+        invalid_type_error: 'Exercise title must be a string',
       })
-      .min(2, 'Exercise name must be at least 2 characters')
-      .max(50, 'Exercise name cannot exceed 50 characters')
+      .min(2, 'Exercise title must be at least 2 characters')
+      .max(100, 'Exercise title cannot exceed 100 characters')
       .trim()
       .optional(),
 
@@ -152,24 +198,11 @@ const updateProgramExerciseValidationSchema = z.object({
       .trim()
       .optional(),
 
-    weight: z
-      .string({
-        invalid_type_error: 'Weight must be a string',
+    sets: z
+      .array(setValidationSchema, {
+        invalid_type_error: 'Sets must be an array',
       })
-      .trim()
-      .optional(),
-
-    reps: z
-      .number({
-        invalid_type_error: 'Reps must be a number',
-      })
-      .optional(),
-
-    time: z
-      .string({
-        invalid_type_error: 'Time must be a string',
-      })
-      .trim()
+      .min(1, 'At least one set is required')
       .optional(),
 
     frequency: z
@@ -179,18 +212,34 @@ const updateProgramExerciseValidationSchema = z.object({
       .trim()
       .optional(),
 
-    image: z
-      .string({
-        invalid_type_error: 'Image must be a string',
-      })
-      .trim()
-      .optional(),
+    image: imageValidationSchema.optional(),
 
     video: z
       .string({
         invalid_type_error: 'Video URL must be a string',
       })
       .trim()
+      .optional(),
+
+    ratePerceivedExertion: z
+      .number({
+        invalid_type_error: 'Rate perceived exertion must be a number',
+      })
+      .min(1, 'Rate perceived exertion must be at least 1')
+      .max(5, 'Rate perceived exertion cannot exceed 5')
+      .optional(),
+
+    clientFeedback: z
+      .string({
+        invalid_type_error: 'Client feedback must be a string',
+      })
+      .trim()
+      .optional(),
+
+    isCompleted: z
+      .boolean({
+        invalid_type_error: 'isCompleted must be a boolean',
+      })
       .optional(),
   }),
 });

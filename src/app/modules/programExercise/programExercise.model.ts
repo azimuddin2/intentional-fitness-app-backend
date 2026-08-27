@@ -1,5 +1,41 @@
 import { Schema, model } from 'mongoose';
-import { TProgramExercise } from './programExercise.interface';
+import { TProgramExercise, TSet, TImage } from './programExercise.interface';
+
+const setSchema = new Schema<TSet>(
+  {
+    weight: {
+      type: String,
+      required: true,
+    },
+    reps: {
+      type: Number,
+      required: true,
+    },
+    time: {
+      type: String,
+      required: true,
+    },
+    rest: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false },
+);
+
+const imageSchema = new Schema<TImage>(
+  {
+    url: {
+      type: String,
+      required: true,
+    },
+    key: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false },
+);
 
 const programExerciseSchema = new Schema<TProgramExercise>(
   {
@@ -8,91 +44,82 @@ const programExerciseSchema = new Schema<TProgramExercise>(
       ref: 'User',
       required: true,
     },
-
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: function (this: TProgramExercise) {
-        return !this.isPublic;
-      },
+      required: true,
     },
-
-    isPublic: {
-      type: Boolean,
-      default: false,
+    program: {
+      type: Schema.Types.ObjectId,
+      ref: 'TrainingProgram',
+      required: true,
     },
-
-    name: {
+    title: {
       type: String,
       required: true,
       trim: true,
     },
-
     colour: {
       type: String,
       required: true,
       trim: true,
     },
-
     description: {
       type: String,
       required: true,
       trim: true,
     },
-
     equipmentSetup: {
       type: String,
       required: true,
       trim: true,
     },
-
     workFeelIntention: {
       type: String,
       required: true,
       trim: true,
     },
-
     trainingNotes: {
       type: String,
       required: true,
       trim: true,
     },
-
-    weight: {
-      type: String,
+    sets: {
+      type: [setSchema],
       required: true,
-      trim: true,
+      validate: {
+        validator: (v: TSet[]) => Array.isArray(v) && v.length > 0,
+        message: 'At least one set is required',
+      },
     },
-
-    reps: {
-      type: Number,
-      required: true,
-    },
-
-    time: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
     frequency: {
       type: String,
       required: true,
       trim: true,
     },
-
     image: {
-      type: String,
+      type: imageSchema,
       required: false,
-      trim: true,
     },
-
     video: {
       type: String,
       required: false,
       trim: true,
     },
-
+    ratePerceivedExertion: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
+    },
+    clientFeedback: {
+      type: String,
+      trim: true,
+    },
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

@@ -11,6 +11,7 @@ import { StabilizeCategoryRoutes } from '../modules/stabilizeCategory/stabilizeC
 import { TrainingProgramRoutes } from '../modules/trainingProgram/trainingProgram.route';
 import { WeeklyJournalTaskRoutes } from '../modules/weeklyJournalTask/weeklyJournalTask.route';
 import { StabilizeExerciseRoutes } from '../modules/stabilizeExercise/stabilizeExercise.route';
+import { ProgramExerciseRoutes } from '../modules/programExercise/programExercise.route';
 
 const router = Router();
 
@@ -55,10 +56,13 @@ const moduleRoutes = [
     path: '/stabilize-exercise',
     route: StabilizeExerciseRoutes,
   },
-
   {
     path: '/training-programs',
     route: TrainingProgramRoutes,
+  },
+  {
+    path: '/training-exercise',
+    route: ProgramExerciseRoutes,
   },
   {
     path: '/weekly-journal-tasks',

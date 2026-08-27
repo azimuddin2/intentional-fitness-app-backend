@@ -28,8 +28,6 @@ const trainingProgramSchema = new Schema<TTrainingProgram>(
   },
 );
 
-trainingProgramSchema.index({ trainer: 1, name: 1 }, { unique: true });
-
 export const TrainingProgram = model<TTrainingProgram>(
   'TrainingProgram',
   trainingProgramSchema,

@@ -58,7 +58,7 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
     },
     video: {
       type: videoSchema,
-      required: true,
+      required: false,
     },
     equipment: {
       type: String,
