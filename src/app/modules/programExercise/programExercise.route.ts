@@ -49,15 +49,6 @@ router.patch(
   ProgramExerciseControllers.updateProgramExercise,
 );
 
-// router.patch(
-//   '/:id/feedback',
-//   auth('user'),
-//   validateRequest(
-//     ProgramExerciseValidations.updateClientFeedbackValidationSchema,
-//   ),
-//   ProgramExerciseControllers.updateClientFeedback,
-// );
-
 router.delete(
   '/:id',
   auth('trainer'),

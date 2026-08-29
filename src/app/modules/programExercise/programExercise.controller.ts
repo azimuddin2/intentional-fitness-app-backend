@@ -77,23 +77,6 @@ const updateProgramExercise = catchAsync(
   },
 );
 
-const updateClientFeedback = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const clientId = req.user.userId;
-  const result = await ProgramExerciseServices.updateClientFeedbackIntoDB(
-    id,
-    clientId,
-    req.body,
-  );
-
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: 'Feedback submitted successfully',
-    data: result,
-  });
-});
-
 const deleteProgramExercise = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -114,6 +97,5 @@ export const ProgramExerciseControllers = {
   getProgramExercisesForClient,
   getProgramExerciseById,
   updateProgramExercise,
-  updateClientFeedback,
   deleteProgramExercise,
 };

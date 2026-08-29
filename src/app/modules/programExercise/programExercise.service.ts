@@ -9,7 +9,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 const createProgramExerciseIntoDB = async (
   trainerId: string,
   payload: TProgramExercise,
-  file: File,
+  file: any,
 ) => {
   const isProgramExists = await TrainingProgram.findOne({
     _id: payload.program,
@@ -107,16 +107,16 @@ const getProgramExerciseByIdFromDB = async (id: string) => {
 const updateProgramExerciseIntoDB = async (
   id: string,
   payload: Partial<TProgramExercise>,
-  file: File,
+  file: any,
 ) => {
   const isExerciseExists = await ProgramExercise.findById(id);
 
   if (!isExerciseExists) {
-    throw new AppError(404, 'Stabilize exercise does not exist');
+    throw new AppError(404, 'Program exercise does not exist');
   }
 
   if (isExerciseExists.isDeleted) {
-    throw new AppError(400, 'This stabilize exercise has been deleted');
+    throw new AppError(400, 'This Program exercise has been deleted');
   }
 
   // Check duplicate exercise title
@@ -135,7 +135,7 @@ const updateProgramExerciseIntoDB = async (
     }
   }
 
-  // 📸 Step 2: Handle image upload
+  // 📸 Handle image upload
   if (file) {
     const uploadedUrl = await uploadToS3({
       file,
@@ -163,36 +163,13 @@ const updateProgramExerciseIntoDB = async (
     );
 
     if (!updatedExercise) {
-      throw new AppError(400, 'Stabilize exercise update failed');
+      throw new AppError(400, 'Program exercise update failed');
     }
 
     return updatedExercise;
   } catch (error: any) {
-    throw new AppError(500, error.message || 'User profile update failed');
+    throw new AppError(500, error.message || 'Program exercise update failed');
   }
-};
-
-const updateClientFeedbackIntoDB = async (
-  id: string,
-  clientId: string,
-  payload: { ratePerceivedExertion?: number; clientFeedback?: string },
-) => {
-  const isExerciseExists = await ProgramExercise.findById(id);
-  if (!isExerciseExists) throw new AppError(404, 'Program exercise not found');
-  if (isExerciseExists.isDeleted)
-    throw new AppError(400, 'This program exercise has been deleted');
-  if (isExerciseExists.user?.toString() !== clientId) {
-    throw new AppError(403, 'You are not allowed to update this exercise');
-  }
-
-  const updatedExercise = await ProgramExercise.findByIdAndUpdate(
-    id,
-    { ...payload, isCompleted: true },
-    { new: true, runValidators: true },
-  );
-
-  if (!updatedExercise) throw new AppError(400, 'Failed to update feedback');
-  return updatedExercise;
 };
 
 const deleteProgramExerciseFromDB = async (id: string) => {
@@ -219,6 +196,5 @@ export const ProgramExerciseServices = {
   getProgramExercisesForClientFromDB,
   getProgramExerciseByIdFromDB,
   updateProgramExerciseIntoDB,
-  updateClientFeedbackIntoDB,
   deleteProgramExerciseFromDB,
 };
