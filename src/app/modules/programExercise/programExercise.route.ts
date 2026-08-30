@@ -18,7 +18,7 @@ const upload = multer({
 router.post(
   '/',
   auth('trainer'),
-  upload.single('image'),
+  upload.fields([{ name: 'images', maxCount: 10 }]),
   parseData(),
   validateRequest(
     ProgramExerciseValidations.createProgramExerciseValidationSchema,
@@ -41,7 +41,7 @@ router.get(
 router.patch(
   '/:id',
   auth('trainer'),
-  upload.single('image'),
+  upload.fields([{ name: 'images', maxCount: 10 }]),
   parseData(),
   validateRequest(
     ProgramExerciseValidations.updateProgramExerciseValidationSchema,

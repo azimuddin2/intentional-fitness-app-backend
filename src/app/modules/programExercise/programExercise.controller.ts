@@ -10,7 +10,7 @@ const createProgramExercise = catchAsync(
     const result = await ProgramExerciseServices.createProgramExerciseIntoDB(
       trainerId,
       req.body,
-      req.file,
+      req.files,
     );
 
     sendResponse(res, {
@@ -65,7 +65,7 @@ const updateProgramExercise = catchAsync(
     const result = await ProgramExerciseServices.updateProgramExerciseIntoDB(
       id,
       req.body,
-      req.file,
+      req.files,
     );
 
     sendResponse(res, {

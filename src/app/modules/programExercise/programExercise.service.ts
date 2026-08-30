@@ -1,15 +1,19 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
-import { deleteFromS3, uploadToS3 } from '../../utils/awsS3FileUploader';
+import {
+  deleteManyFromS3,
+  uploadManyToS3,
+} from '../../utils/awsS3FileUploader';
 import { TrainingProgram } from '../trainingProgram/trainingProgram.model';
 import { TProgramExercise } from './programExercise.interface';
 import { ProgramExercise } from './programExercise.model';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { UploadedFiles } from '../../interface/common.interface';
 
 const createProgramExerciseIntoDB = async (
   trainerId: string,
   payload: TProgramExercise,
-  file: any,
+  files: any,
 ) => {
   const isProgramExists = await TrainingProgram.findOne({
     _id: payload.program,
@@ -34,15 +38,26 @@ const createProgramExerciseIntoDB = async (
     throw new AppError(400, 'This exercise already exists in this program');
   }
 
-  if (file) {
-    const uploadedUrl = await uploadToS3({
-      file,
-      fileName: `images/program/exercise/${Date.now()}-${Math.floor(
-        1000 + Math.random() * 9000,
-      )}`,
-    });
+  // Handle image upload to S3
+  if (files) {
+    const { images } = files as UploadedFiles;
 
-    payload.image = uploadedUrl;
+    if (!images?.length) {
+      throw new AppError(404, 'At least one image is required');
+    }
+
+    if (images?.length) {
+      const imgsArray = images.map((image) => ({
+        file: image,
+        path: `images/program/exercise`,
+      }));
+
+      try {
+        payload.images = await uploadManyToS3(imgsArray);
+      } catch (error) {
+        throw new AppError(500, 'Image upload failed');
+      }
+    }
   }
 
   const result = await ProgramExercise.create({
@@ -107,7 +122,7 @@ const getProgramExerciseByIdFromDB = async (id: string) => {
 const updateProgramExerciseIntoDB = async (
   id: string,
   payload: Partial<TProgramExercise>,
-  file: any,
+  files: any,
 ) => {
   const isExerciseExists = await ProgramExercise.findById(id);
 
@@ -135,21 +150,41 @@ const updateProgramExerciseIntoDB = async (
     }
   }
 
-  // 📸 Handle image upload
-  if (file) {
-    const uploadedUrl = await uploadToS3({
-      file,
-      fileName: `images/program/exercise/${Date.now()}-${Math.floor(
-        1000 + Math.random() * 9000,
-      )}`,
-    });
+  const { deleteKey } = payload;
 
-    // 🧹 Delete old image if exists
-    if (isExerciseExists.image) {
-      await deleteFromS3(isExerciseExists.image);
+  // Handle image upload to S3
+  if (files) {
+    const { images } = files as UploadedFiles;
+
+    if (images?.length) {
+      const imgsArray = images.map((image) => ({
+        file: image,
+        path: `images/product`,
+      }));
+
+      try {
+        payload.images = await uploadManyToS3(imgsArray); // Await all uploads before proceeding
+      } catch (error) {
+        throw new AppError(500, 'Image upload failed');
+      }
     }
+  }
 
-    payload.image = uploadedUrl;
+  // Handle image deletions (if any)
+  if (deleteKey && deleteKey.length > 0) {
+    const newKey = deleteKey?.map((key: any) => `images/product/${key}`);
+
+    if (newKey.length > 0) {
+      await deleteManyFromS3(newKey); // Delete images from S3
+      // Remove deleted images from the product
+      await ProgramExercise.findByIdAndUpdate(
+        id,
+        {
+          $pull: { images: { key: { $in: deleteKey } } },
+        },
+        { new: true },
+      );
+    }
   }
 
   try {

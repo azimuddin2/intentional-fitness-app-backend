@@ -1,6 +1,14 @@
 import { Schema, model } from 'mongoose';
 import { TProgramExercise, TSet } from './programExercise.interface';
 
+const imageSchema = new Schema(
+  {
+    url: { type: String, required: true },
+    key: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const setSchema = new Schema<TSet>(
   {
     weight: {
@@ -83,10 +91,9 @@ const programExerciseSchema = new Schema<TProgramExercise>(
       required: true,
       trim: true,
     },
-    image: {
-      type: String,
+    images: {
+      type: [imageSchema],
       required: true,
-      trim: true,
     },
     video: {
       type: String,

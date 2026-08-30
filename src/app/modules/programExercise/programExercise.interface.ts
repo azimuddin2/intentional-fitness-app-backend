@@ -9,6 +9,11 @@ export type TSet = {
   rest: string;
 };
 
+export type TImage = {
+  url: string;
+  key: string;
+};
+
 export type TProgramExercise = {
   _id: ObjectId;
   trainer: ObjectId | TUser;
@@ -27,7 +32,8 @@ export type TProgramExercise = {
 
   frequency: string;
 
-  image: string | null;
+  images: TImage[];
+  deleteKey: string[];
   video: string;
 
   ratePerceivedExertion?: number;
