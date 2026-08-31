@@ -159,7 +159,7 @@ const updateProgramExerciseIntoDB = async (
     if (images?.length) {
       const imgsArray = images.map((image) => ({
         file: image,
-        path: `images/product`,
+        path: `images/program/exercise`,
       }));
 
       try {
@@ -172,7 +172,9 @@ const updateProgramExerciseIntoDB = async (
 
   // Handle image deletions (if any)
   if (deleteKey && deleteKey.length > 0) {
-    const newKey = deleteKey?.map((key: any) => `images/product/${key}`);
+    const newKey = deleteKey?.map(
+      (key: any) => `images/program/exercise/${key}`,
+    );
 
     if (newKey.length > 0) {
       await deleteManyFromS3(newKey); // Delete images from S3

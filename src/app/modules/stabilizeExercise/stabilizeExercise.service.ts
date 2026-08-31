@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
 import { UploadedFiles } from '../../interface/common.interface';
-import { deleteFromS3, uploadManyToS3 } from '../../utils/awsS3FileUploader';
+import {
+  deleteFromS3,
+  deleteManyFromS3,
+  uploadManyToS3,
+} from '../../utils/awsS3FileUploader';
 import { StabilizeCategory } from '../stabilizeCategory/stabilizeCategory.model';
 import { TStabilizeExercise } from './stabilizeExercise.interface';
 import { StabilizeExercise } from './stabilizeExercise.model';
@@ -38,30 +42,27 @@ const createStabilizeExerciseIntoDB = async (
     throw new AppError(400, 'This exercise already exists in this category');
   }
 
-  // Handle single video upload to S3
-  //   if (files) {
-  //     const { video } = files as UploadedFiles;
+  // Handle image upload to S3
+  if (files) {
+    const { images } = files as UploadedFiles;
 
-  //     if (!video?.length) {
-  //       throw new AppError(404, 'Exercise video is required');
-  //     }
+    if (!images?.length) {
+      throw new AppError(404, 'At least one image is required');
+    }
 
-  //     if (video?.length) {
-  //       const videoArray = [
-  //         {
-  //           file: video[0],
-  //           path: `videos/exercise`,
-  //         },
-  //       ];
+    if (images?.length) {
+      const imgsArray = images.map((image) => ({
+        file: image,
+        path: `images/stabilize/exercise`,
+      }));
 
-  //       try {
-  //         const uploaded = await uploadManyToS3(videoArray);
-  //         payload.video = uploaded[0];
-  //       } catch (error) {
-  //         throw new AppError(500, 'Video upload failed');
-  //       }
-  //     }
-  //   }
+      try {
+        payload.images = await uploadManyToS3(imgsArray);
+      } catch (error) {
+        throw new AppError(500, 'Image upload failed');
+      }
+    }
+  }
 
   const result = await StabilizeExercise.create({
     ...payload,
@@ -147,20 +148,42 @@ const updateStabilizeExerciseIntoDB = async (
     }
   }
 
+  const { deleteKey } = payload;
+
+  // Handle image upload to S3
   if (files) {
-    const { video } = files as { video?: any[] };
-    if (video?.length) {
+    const { images } = files as UploadedFiles;
+
+    if (images?.length) {
+      const imgsArray = images.map((image) => ({
+        file: image,
+        path: `images/stabilize/exercise`,
+      }));
+
       try {
-        if (isExerciseExists.video?.key) {
-          await deleteFromS3(isExerciseExists.video.key);
-        }
-        const uploaded = await uploadManyToS3([
-          { file: video[0], path: 'videos/exercise' },
-        ]);
-        payload.video = uploaded[0];
+        payload.images = await uploadManyToS3(imgsArray); // Await all uploads before proceeding
       } catch (error) {
-        throw new AppError(500, 'Video update failed');
+        throw new AppError(500, 'Image upload failed');
       }
+    }
+  }
+
+  // Handle image deletions (if any)
+  if (deleteKey && deleteKey.length > 0) {
+    const newKey = deleteKey?.map(
+      (key: any) => `images/stabilize/exercise/${key}`,
+    );
+
+    if (newKey.length > 0) {
+      await deleteManyFromS3(newKey); // Delete images from S3
+      // Remove deleted images from the product
+      await StabilizeExercise.findByIdAndUpdate(
+        id,
+        {
+          $pull: { images: { key: { $in: deleteKey } } },
+        },
+        { new: true },
+      );
     }
   }
 

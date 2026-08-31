@@ -100,20 +100,6 @@ const programExerciseSchema = new Schema<TProgramExercise>(
       required: true,
       trim: true,
     },
-    ratePerceivedExertion: {
-      type: Number,
-      min: 1,
-      max: 5,
-      default: null,
-    },
-    clientFeedback: {
-      type: String,
-      trim: true,
-    },
-    isCompleted: {
-      type: Boolean,
-      default: false,
-    },
     isDeleted: {
       type: Boolean,
       default: false,

@@ -79,20 +79,6 @@ const createStabilizeExerciseValidationSchema = z.object({
         required_error: 'At least one set is required',
       })
       .min(1, 'At least one set is required'),
-    ratePerceivedExertion: z
-      .number({
-        invalid_type_error: 'Rate of Perceived Exertion must be a number',
-      })
-      .min(1, 'Rate of Perceived Exertion cannot be less than 1')
-      .max(5, 'Rate of Perceived Exertion cannot exceed 5')
-      .optional(),
-    clientFeedback: z
-      .string({ invalid_type_error: 'Client feedback must be a string' })
-      .trim()
-      .optional(),
-    isCompleted: z
-      .boolean({ invalid_type_error: 'isCompleted must be a boolean' })
-      .optional(),
   }),
 });
 
@@ -139,24 +125,7 @@ const updateStabilizeExerciseValidationSchema = z.object({
   }),
 });
 
-const updateClientFeedbackValidationSchema = z.object({
-  body: z.object({
-    ratePerceivedExertion: z
-      .number({
-        invalid_type_error: 'Rate of Perceived Exertion must be a number',
-      })
-      .min(1, 'Rate of Perceived Exertion cannot be less than 1')
-      .max(5, 'Rate of Perceived Exertion cannot exceed 5')
-      .optional(),
-    clientFeedback: z
-      .string({ invalid_type_error: 'Client feedback must be a string' })
-      .trim()
-      .optional(),
-  }),
-});
-
 export const StabilizeExerciseValidations = {
   createStabilizeExerciseValidationSchema,
   updateStabilizeExerciseValidationSchema,
-  updateClientFeedbackValidationSchema,
 };

@@ -11,7 +11,7 @@ const router = express.Router();
 const upload = multer({
   storage: memoryStorage(),
   limits: {
-    fileSize: 100 * 1024 * 1024,
+    fileSize: 5 * 1024 * 1024,
     fieldSize: 25 * 1024 * 1024,
   },
 });
@@ -19,7 +19,7 @@ const upload = multer({
 router.post(
   '/',
   auth('trainer'),
-  upload.fields([{ name: 'video', maxCount: 1 }]),
+  upload.fields([{ name: 'images', maxCount: 10 }]),
   parseData(),
   validateRequest(
     StabilizeExerciseValidations.createStabilizeExerciseValidationSchema,
@@ -42,7 +42,7 @@ router.get(
 router.patch(
   '/:id',
   auth('trainer'),
-  upload.fields([{ name: 'video', maxCount: 1 }]),
+  upload.fields([{ name: 'images', maxCount: 10 }]),
   parseData(),
   validateRequest(
     StabilizeExerciseValidations.updateStabilizeExerciseValidationSchema,

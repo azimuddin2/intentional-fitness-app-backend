@@ -1,9 +1,5 @@
 import { Schema, model } from 'mongoose';
-import {
-  TStabilizeExercise,
-  TSet,
-  TVideo,
-} from './stabilizeExercise.interface';
+import { TStabilizeExercise, TSet } from './stabilizeExercise.interface';
 
 const setSchema = new Schema<TSet>(
   {
@@ -15,16 +11,10 @@ const setSchema = new Schema<TSet>(
   { _id: false },
 );
 
-const videoSchema = new Schema<TVideo>(
+const imageSchema = new Schema(
   {
-    url: {
-      type: String,
-      required: true,
-    },
-    key: {
-      type: String,
-      required: true,
-    },
+    url: { type: String, required: true },
+    key: { type: String, required: true },
   },
   { _id: false },
 );
@@ -56,9 +46,14 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
       required: true,
       trim: true,
     },
+    images: {
+      type: [imageSchema],
+      required: true,
+    },
     video: {
-      type: videoSchema,
-      required: false,
+      type: String,
+      required: true,
+      trim: true,
     },
     equipment: {
       type: String,
@@ -92,20 +87,6 @@ const stabilizeExerciseSchema = new Schema<TStabilizeExercise>(
         validator: (v: TSet[]) => Array.isArray(v) && v.length > 0,
         message: 'At least one set is required',
       },
-    },
-    ratePerceivedExertion: {
-      type: Number,
-      min: 1,
-      max: 5,
-      default: null,
-    },
-    clientFeedback: {
-      type: String,
-      trim: true,
-    },
-    isCompleted: {
-      type: Boolean,
-      default: false,
     },
     isDeleted: {
       type: Boolean,

@@ -109,27 +109,6 @@ const createProgramExerciseValidationSchema = z.object({
         invalid_type_error: 'Video URL must be a string',
       })
       .trim(),
-
-    ratePerceivedExertion: z
-      .number({
-        invalid_type_error: 'Rate perceived exertion must be a number',
-      })
-      .min(1, 'Rate perceived exertion must be at least 1')
-      .max(5, 'Rate perceived exertion cannot exceed 5')
-      .optional(),
-
-    clientFeedback: z
-      .string({
-        invalid_type_error: 'Client feedback must be a string',
-      })
-      .trim()
-      .optional(),
-
-    isCompleted: z
-      .boolean({
-        invalid_type_error: 'isCompleted must be a boolean',
-      })
-      .optional(),
   }),
 });
 
@@ -199,27 +178,6 @@ const updateProgramExerciseValidationSchema = z.object({
         invalid_type_error: 'Video URL must be a string',
       })
       .trim()
-      .optional(),
-
-    ratePerceivedExertion: z
-      .number({
-        invalid_type_error: 'Rate perceived exertion must be a number',
-      })
-      .min(1, 'Rate perceived exertion must be at least 1')
-      .max(5, 'Rate perceived exertion cannot exceed 5')
-      .optional(),
-
-    clientFeedback: z
-      .string({
-        invalid_type_error: 'Client feedback must be a string',
-      })
-      .trim()
-      .optional(),
-
-    isCompleted: z
-      .boolean({
-        invalid_type_error: 'isCompleted must be a boolean',
-      })
       .optional(),
   }),
 });

@@ -36,9 +36,5 @@ export type TProgramExercise = {
   deleteKey: string[];
   video: string;
 
-  ratePerceivedExertion?: number;
-  clientFeedback?: string;
-  isCompleted: boolean;
-
   isDeleted: boolean;
 };

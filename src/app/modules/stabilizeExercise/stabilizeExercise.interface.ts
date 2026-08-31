@@ -2,7 +2,7 @@ import { ObjectId } from 'mongoose';
 import { TUser } from '../user/user.interface';
 import { TStabilizeCategory } from '../stabilizeCategory/stabilizeCategory.interface';
 
-export type TVideo = {
+export type TImage = {
   url: string;
   key: string;
 };
@@ -22,7 +22,10 @@ export type TStabilizeExercise = {
 
   title: string;
   description: string;
-  video: TVideo;
+
+  images: TImage[];
+  deleteKey: string[];
+  video: string;
 
   equipment: string;
   duration: string;
@@ -30,10 +33,6 @@ export type TStabilizeExercise = {
   trainingNotes: string;
   workFeelIntention: string;
   sets: TSet[];
-
-  ratePerceivedExertion: number;
-  clientFeedback: string;
-  isCompleted: boolean;
 
   isDeleted: boolean;
 };
