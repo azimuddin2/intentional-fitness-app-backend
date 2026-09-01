@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
 import { UploadedFiles } from '../../interface/common.interface';
 import {
-  deleteFromS3,
   deleteManyFromS3,
   uploadManyToS3,
 } from '../../utils/awsS3FileUploader';

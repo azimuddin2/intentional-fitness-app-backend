@@ -8,22 +8,28 @@ const router = express.Router();
 
 router.post(
   '/',
-  auth('admin', 'user'),
+  auth('trainer', 'user'),
   validateRequest(GoalValidations.createGoalValidationSchema),
   GoalControllers.createGoal,
 );
 
-router.get('/', auth('admin', 'user'), GoalControllers.getAllGoals);
+router.get('/', auth('user'), GoalControllers.getMyGoals);
 
-router.get('/:id', auth('admin', 'user'), GoalControllers.getGoalById);
+router.get('/:id', auth('trainer', 'user'), GoalControllers.getGoalById);
 
 router.patch(
   '/:id',
-  auth('admin', 'user'),
+  auth('trainer', 'user'),
   validateRequest(GoalValidations.updateGoalValidationSchema),
   GoalControllers.updateGoal,
 );
 
-router.delete('/:id', auth('admin', 'user'), GoalControllers.deleteGoal);
+router.patch(
+  '/:id/favorite',
+  auth('trainer', 'user'),
+  GoalControllers.markAsFavorite,
+);
+
+router.delete('/:id', auth('trainer', 'user'), GoalControllers.deleteGoal);
 
 export const GoalRoutes = router;

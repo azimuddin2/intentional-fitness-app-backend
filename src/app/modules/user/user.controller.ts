@@ -147,7 +147,7 @@ const updateNotificationSettings = catchAsync(
 
     const result = await UserServices.updateNotificationSettingsIntoDB(
       email,
-      notifications, // ✅ boolean only
+      notifications,
     );
 
     sendResponse(res, {

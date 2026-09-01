@@ -4,7 +4,8 @@ import sendResponse from '../../utils/sendResponse';
 import { GoalServices } from './goal.service';
 
 const createGoal = catchAsync(async (req: Request, res: Response) => {
-  const result = await GoalServices.createGoalIntoDB(req.body);
+  const userId = req.user.userId;
+  const result = await GoalServices.createGoalIntoDB(userId, req.body);
 
   sendResponse(res, {
     statusCode: 201,
@@ -14,13 +15,14 @@ const createGoal = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllGoals = catchAsync(async (req: Request, res: Response) => {
-  const result = await GoalServices.getAllGoalsFromDB(req.query);
+const getMyGoals = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const result = await GoalServices.getMyGoalsFromDB(userId, req.query);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Goals retrieved successfully',
+    message: 'My goals retrieved successfully',
     meta: result.meta,
     data: result.result,
   });
@@ -50,6 +52,18 @@ const updateGoal = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const markAsFavorite = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await GoalServices.markAsFavoriteIntoDB(id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Goal updated successfully',
+    data: result,
+  });
+});
+
 const deleteGoal = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const result = await GoalServices.deleteGoalFromDB(id);
@@ -64,8 +78,9 @@ const deleteGoal = catchAsync(async (req: Request, res: Response) => {
 
 export const GoalControllers = {
   createGoal,
-  getAllGoals,
+  getMyGoals,
   getGoalById,
   updateGoal,
+  markAsFavorite,
   deleteGoal,
 };

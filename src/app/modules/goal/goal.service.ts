@@ -4,8 +4,8 @@ import { TGoal } from './goal.interface';
 import { Goal } from './goal.model';
 import mongoose from 'mongoose';
 
-const createGoalIntoDB = async (payload: TGoal) => {
-  const result = await Goal.create(payload);
+const createGoalIntoDB = async (userId: string, payload: TGoal) => {
+  const result = await Goal.create({ ...payload, user: userId });
 
   if (!result) {
     throw new AppError(400, 'Failed to create goal');
@@ -14,7 +14,7 @@ const createGoalIntoDB = async (payload: TGoal) => {
   return result;
 };
 
-const getGoalByUserFromDB = async (
+const getMyGoalsFromDB = async (
   userId: string,
   query: Record<string, unknown>,
 ) => {
@@ -22,11 +22,10 @@ const getGoalByUserFromDB = async (
     throw new AppError(400, 'Invalid user ID');
   }
 
-  const goalCategoryQuery = new QueryBuilder(
+  const goalQuery = new QueryBuilder(
     Goal.find({
       user: userId,
-      isDeleted: false,
-    }).populate('user', 'name email'),
+    }),
     query,
   )
     .filter()
@@ -34,8 +33,35 @@ const getGoalByUserFromDB = async (
     .paginate()
     .fields();
 
-  const meta = await goalCategoryQuery.countTotal();
-  const result = await goalCategoryQuery.modelQuery;
+  const meta = await goalQuery.countTotal();
+  const result = await goalQuery.modelQuery;
+
+  return { meta, result };
+};
+
+const getGoalByUserFromDB = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  console.log('userId:', userId);
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
+  }
+
+  const goalQuery = new QueryBuilder(
+    Goal.find({
+      user: userId,
+      isDeleted: false,
+    }),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await goalQuery.countTotal();
+  const result = await goalQuery.modelQuery;
 
   return { meta, result };
 };
@@ -57,21 +83,36 @@ const updateGoalIntoDB = async (id: string, payload: Partial<TGoal>) => {
     throw new AppError(404, 'Goal does not exist');
   }
 
-  try {
-    const updatedGoal = await Goal.findByIdAndUpdate(id, payload, {
-      new: true,
-      runValidators: true,
-    });
+  const updatedGoal = await Goal.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  });
 
-    if (!updatedGoal) {
-      throw new AppError(400, 'Goal update failed');
-    }
-
-    return updatedGoal;
-  } catch (error: any) {
-    console.error('updateGoalIntoDB Error:', error);
-    throw new AppError(500, 'Failed to update goal');
+  if (!updatedGoal) {
+    throw new AppError(400, 'Goal update failed');
   }
+
+  return updatedGoal;
+};
+
+const markAsFavoriteIntoDB = async (id: string) => {
+  const isGoalExists = await Goal.findById(id);
+
+  if (!isGoalExists) {
+    throw new AppError(404, 'Goal not found');
+  }
+
+  const result = await Goal.findByIdAndUpdate(
+    id,
+    { isFavorite: !isGoalExists.isFavorite },
+    { new: true },
+  );
+
+  if (!result) {
+    throw new AppError(400, 'Failed to update goal');
+  }
+
+  return result;
 };
 
 const deleteGoalFromDB = async (id: string) => {
@@ -81,7 +122,6 @@ const deleteGoalFromDB = async (id: string) => {
     throw new AppError(404, 'Goal not found');
   }
 
-  // Hard delete from database
   const result = await Goal.findByIdAndDelete(id);
 
   if (!result) {
@@ -93,8 +133,9 @@ const deleteGoalFromDB = async (id: string) => {
 
 export const GoalServices = {
   createGoalIntoDB,
-  getGoalByUserFromDB,
+  getMyGoalsFromDB,
   getGoalByIdFromDB,
   updateGoalIntoDB,
+  markAsFavoriteIntoDB,
   deleteGoalFromDB,
 };
