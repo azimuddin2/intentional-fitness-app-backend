@@ -15,6 +15,8 @@ router.post(
 
 router.get('/', auth('user'), GoalControllers.getMyGoals);
 
+router.get('/find', auth('trainer', 'user'), GoalControllers.getGoalByUser);
+
 router.get('/:id', auth('trainer', 'user'), GoalControllers.getGoalById);
 
 router.patch(

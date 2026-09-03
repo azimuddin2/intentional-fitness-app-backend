@@ -43,7 +43,6 @@ const getGoalByUserFromDB = async (
   userId: string,
   query: Record<string, unknown>,
 ) => {
-  console.log('userId:', userId);
   if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
     throw new AppError(400, 'Invalid user ID');
   }
@@ -51,7 +50,6 @@ const getGoalByUserFromDB = async (
   const goalQuery = new QueryBuilder(
     Goal.find({
       user: userId,
-      isDeleted: false,
     }),
     query,
   )
@@ -134,6 +132,7 @@ const deleteGoalFromDB = async (id: string) => {
 export const GoalServices = {
   createGoalIntoDB,
   getMyGoalsFromDB,
+  getGoalByUserFromDB,
   getGoalByIdFromDB,
   updateGoalIntoDB,
   markAsFavoriteIntoDB,

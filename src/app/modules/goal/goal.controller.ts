@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { GoalServices } from './goal.service';
+import AppError from '../../errors/AppError';
 
 const createGoal = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
@@ -23,6 +24,23 @@ const getMyGoals = catchAsync(async (req: Request, res: Response) => {
     statusCode: 200,
     success: true,
     message: 'My goals retrieved successfully',
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
+const getGoalByUser = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.query.user as string;
+
+  if (!userId) {
+    throw new AppError(400, 'User ID is required');
+  }
+  const result = await GoalServices.getGoalByUserFromDB(userId, req.query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Goals retrieved successfully',
     meta: result.meta,
     data: result.result,
   });
@@ -79,6 +97,7 @@ const deleteGoal = catchAsync(async (req: Request, res: Response) => {
 export const GoalControllers = {
   createGoal,
   getMyGoals,
+  getGoalByUser,
   getGoalById,
   updateGoal,
   markAsFavorite,
