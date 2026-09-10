@@ -6,7 +6,12 @@ const scheduledExerciseSchema = new Schema<TScheduledExercise>(
     exercise: {
       type: Schema.Types.ObjectId,
       required: true,
-      refPath: 'exerciseSourceType',
+      refPath: 'exercises.exerciseSourceType',
+    },
+    exerciseSourceType: {
+      type: String,
+      enum: ['StabilizeExercise', 'ProgramExercise'],
+      required: true,
     },
     isCompleted: {
       type: Boolean,
@@ -27,16 +32,9 @@ const scheduledExerciseSchema = new Schema<TScheduledExercise>(
 
 const scheduleSchema = new Schema<TSchedule>(
   {
-    trainer: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
+    trainer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+
     sourceType: {
       type: String,
       enum: ['StabilizeCategory', 'TrainingProgram'],
@@ -47,27 +45,19 @@ const scheduleSchema = new Schema<TSchedule>(
       required: true,
       refPath: 'sourceType',
     },
-    exerciseSourceType: {
-      type: String,
-      enum: ['StabilizeExercise', 'ProgramExercise'],
-      required: true,
-    },
+
     exercises: {
       type: [scheduledExerciseSchema],
       required: true,
       validate: {
-        validator: (v) => Array.isArray(v) && v.length > 0,
+        validator: (v: TScheduledExercise[]) =>
+          Array.isArray(v) && v.length > 0,
         message: 'At least one exercise is required',
       },
     },
-    date: {
-      type: Date,
-      required: true,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
+
+    date: { type: Date, required: true },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

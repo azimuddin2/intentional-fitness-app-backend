@@ -10,6 +10,7 @@ export type TExerciseSourceType = 'StabilizeExercise' | 'ProgramExercise';
 
 export type TScheduledExercise = {
   exercise: ObjectId | TStabilizeExercise | TProgramExercise;
+  exerciseSourceType: TExerciseSourceType;
   isCompleted: boolean;
   ratePerceivedExertion?: number;
   clientFeedback?: string;
@@ -19,10 +20,12 @@ export type TSchedule = {
   _id: ObjectId;
   trainer: ObjectId | TUser;
   user: ObjectId | TUser;
+
   sourceType: TSourceType;
   source: ObjectId | TStabilizeCategory | TTrainingProgram;
-  exerciseSourceType: TExerciseSourceType;
+
   exercises: TScheduledExercise[];
+
   date: Date;
   isDeleted: boolean;
 };
