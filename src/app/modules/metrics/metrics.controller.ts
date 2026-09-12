@@ -1,9 +1,7 @@
 import { Request, Response } from 'express';
-
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import AppError from '../../errors/AppError';
-
 import { MetricServices } from './metrics.service';
 
 const createMetric = catchAsync(async (req: Request, res: Response) => {

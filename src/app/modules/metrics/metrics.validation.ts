@@ -14,8 +14,6 @@ const createMetricValidationSchema = z.object({
       required_error: 'Description is required',
     }),
 
-    unit: z.string().optional(),
-
     isActive: z.boolean().optional(),
   }),
 });

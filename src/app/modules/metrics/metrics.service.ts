@@ -3,6 +3,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import mongoose from 'mongoose';
 import { TMetric } from './metrics.interface';
 import { Metric } from './metrics.model';
+import { User } from '../user/user.model';
 
 const createMetricIntoDB = async (
   trainerId: string,
@@ -17,10 +18,15 @@ const createMetricIntoDB = async (
     throw new AppError(400, 'Invalid user ID');
   }
 
+  const userExists = await User.findById(userId);
+  if (!userExists) {
+    throw new AppError(404, 'User not found');
+  }
+
   const result = await Metric.create({
     ...payload,
     trainer: trainerId,
-    user: userId,
+    user: userExists._id,
   });
 
   if (!result) {
@@ -31,6 +37,31 @@ const createMetricIntoDB = async (
 };
 
 const getMyMetricsFromDB = async (
+  userId: string,
+  query: Record<string, unknown>,
+) => {
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
+  }
+
+  const metricQuery = new QueryBuilder(
+    Metric.find({
+      user: userId,
+    }),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await metricQuery.countTotal();
+  const result = await metricQuery.modelQuery;
+
+  return { meta, result };
+};
+
+const getMetricsByUserFromDB = async (
   userId: string,
   query: Record<string, unknown>,
 ) => {
@@ -67,31 +98,6 @@ const getMetricByIdFromDB = async (id: string) => {
   }
 
   return result;
-};
-
-const getMetricsByUserFromDB = async (
-  userId: string,
-  query: Record<string, unknown>,
-) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    throw new AppError(400, 'Invalid user ID');
-  }
-
-  const metricQuery = new QueryBuilder(
-    Metric.find({
-      user: userId,
-    }),
-    query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
-
-  const meta = await metricQuery.countTotal();
-  const result = await metricQuery.modelQuery;
-
-  return { meta, result };
 };
 
 const updateMetricIntoDB = async (id: string, payload: Partial<TMetric>) => {

@@ -1,8 +1,6 @@
 import express from 'express';
-
 import validateRequest from '../../middlewares/validateRequest';
 import auth from '../../middlewares/auth';
-
 import { MetricValidations } from './metrics.validation';
 import { MetricControllers } from './metrics.controller';
 

@@ -13,6 +13,7 @@ import { WeeklyJournalTaskRoutes } from '../modules/weeklyJournalTask/weeklyJour
 import { StabilizeExerciseRoutes } from '../modules/stabilizeExercise/stabilizeExercise.route';
 import { ProgramExerciseRoutes } from '../modules/programExercise/programExercise.route';
 import { GoalRoutes } from '../modules/goal/goal.route';
+import { MetricRoutes } from '../modules/metrics/metrics.route';
 
 const router = Router();
 
@@ -72,6 +73,10 @@ const moduleRoutes = [
   {
     path: '/goals',
     route: GoalRoutes,
+  },
+  {
+    path: '/metrics',
+    route: MetricRoutes,
   },
 ];
 

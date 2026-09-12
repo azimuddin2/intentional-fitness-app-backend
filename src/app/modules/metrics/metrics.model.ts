@@ -23,10 +23,6 @@ const MetricSchema = new Schema<TMetric>(
       required: [true, 'Description is required'],
       trim: true,
     },
-    unit: {
-      type: String,
-      trim: true,
-    },
     isActive: {
       type: Boolean,
       default: true,

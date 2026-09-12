@@ -7,7 +7,6 @@ export type TMetric = {
   trainer: ObjectId | TUser;
   title: string;
   description: string;
-  unit?: string;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
