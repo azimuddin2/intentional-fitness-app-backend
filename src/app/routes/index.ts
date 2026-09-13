@@ -14,6 +14,7 @@ import { StabilizeExerciseRoutes } from '../modules/stabilizeExercise/stabilizeE
 import { ProgramExerciseRoutes } from '../modules/programExercise/programExercise.route';
 import { GoalRoutes } from '../modules/goal/goal.route';
 import { MetricRoutes } from '../modules/metrics/metrics.route';
+import { CheckInRoutes } from '../modules/checkIn/checkIn.route';
 
 const router = Router();
 
@@ -77,6 +78,10 @@ const moduleRoutes = [
   {
     path: '/metrics',
     route: MetricRoutes,
+  },
+  {
+    path: '/check-ins',
+    route: CheckInRoutes,
   },
 ];
 

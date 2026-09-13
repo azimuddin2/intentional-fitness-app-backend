@@ -26,7 +26,7 @@ const CheckInSchema = new Schema<TCheckIn>(
       trim: true,
     },
     checkInDate: {
-      type: String,
+      type: Date,
       required: [true, 'Check-in date is required'],
     },
   },

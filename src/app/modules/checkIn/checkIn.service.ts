@@ -4,8 +4,14 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { TCheckIn } from './checkIn.interface';
 import { CheckIn } from './checkIn.model';
 import { Metric } from '../metrics/metrics.model';
+import { getDayBoundary } from './checkIn.utils';
+import { uploadToS3 } from '../../utils/awsS3FileUploader';
 
-const createCheckInIntoDB = async (userId: string, payload: TCheckIn) => {
+const createCheckInIntoDB = async (
+  userId: string,
+  payload: TCheckIn,
+  file?: Express.Multer.File,
+) => {
   if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
     throw new AppError(400, 'Invalid user ID');
   }
@@ -17,7 +23,10 @@ const createCheckInIntoDB = async (userId: string, payload: TCheckIn) => {
     throw new AppError(400, 'Invalid metric ID');
   }
 
-  // Check metric exists and belongs to this user
+  if (!payload.note?.trim() && !file) {
+    throw new AppError(400, 'Either note or photo is required for check-in');
+  }
+
   const metric = await Metric.findOne({
     _id: payload.metric,
     user: userId,
@@ -28,19 +37,48 @@ const createCheckInIntoDB = async (userId: string, payload: TCheckIn) => {
     throw new AppError(404, 'Metric not found for this user');
   }
 
-  // Determine proof type automatically
-  let proofType: 'text' | 'photo' | undefined;
+  const { startOfDay, endOfDay } = getDayBoundary();
 
-  if (payload.note) {
-    proofType = 'text';
-  } else if (payload.photo) {
+  const existingCheckIn = await CheckIn.findOne({
+    user: userId,
+    metric: payload.metric,
+    checkInDate: { $gte: startOfDay, $lte: endOfDay },
+  });
+
+  if (existingCheckIn) {
+    throw new AppError(400, 'Already checked in today for this metric');
+  }
+
+  let photoUrl: string | undefined;
+
+  if (file) {
+    const uploadResult = await uploadToS3({
+      file,
+      fileName: `images/check-in/${Date.now()}-${Math.floor(
+        1000 + Math.random() * 9000,
+      )}`,
+    });
+
+    if (!uploadResult) {
+      throw new AppError(500, 'Failed to upload photo. Please try again.');
+    }
+
+    photoUrl = uploadResult;
+  }
+
+  let proofType: 'text' | 'photo' | undefined;
+  if (photoUrl) {
     proofType = 'photo';
+  } else if (payload.note) {
+    proofType = 'text';
   }
 
   const result = await CheckIn.create({
     ...payload,
     user: userId,
+    photo: photoUrl,
     proofType,
+    checkInDate: new Date(),
   });
 
   if (!result) {
@@ -48,31 +86,6 @@ const createCheckInIntoDB = async (userId: string, payload: TCheckIn) => {
   }
 
   return result;
-};
-
-const getMyCheckInsFromDB = async (
-  userId: string,
-  query: Record<string, unknown>,
-) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    throw new AppError(400, 'Invalid user ID');
-  }
-
-  const checkInQuery = new QueryBuilder(
-    CheckIn.find({
-      user: userId,
-    }).populate('metric'),
-    query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
-
-  const meta = await checkInQuery.countTotal();
-  const result = await checkInQuery.modelQuery;
-
-  return { meta, result };
 };
 
 const getCheckInsByMetricFromDB = async (
@@ -102,7 +115,7 @@ const getCheckInsByMetricFromDB = async (
     CheckIn.find({
       user: userId,
       metric: metricId,
-    }).populate('metric'),
+    }),
     query,
   )
     .filter()
@@ -116,103 +129,49 @@ const getCheckInsByMetricFromDB = async (
   return { meta, result };
 };
 
-const getCheckInByIdFromDB = async (userId: string, id: string) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError(400, 'Invalid check-in ID');
-  }
-
-  const result = await CheckIn.findOne({
-    _id: id,
-    user: userId,
-  }).populate('metric');
-
-  if (!result) {
-    throw new AppError(404, 'Check-in not found');
-  }
-
-  return result;
-};
-
-const updateCheckInIntoDB = async (
+const getCheckInsByUserFromDB = async (
   userId: string,
-  id: string,
-  payload: Partial<TCheckIn>,
+  metricId: string,
+  query: Record<string, unknown>,
 ) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError(400, 'Invalid check-in ID');
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
-  const isCheckInExists = await CheckIn.findOne({
-    _id: id,
+  if (!mongoose.Types.ObjectId.isValid(metricId)) {
+    throw new AppError(400, 'Invalid metric ID');
+  }
+
+  // Make sure this metric belongs to the user
+  const metric = await Metric.findOne({
+    _id: metricId,
     user: userId,
   });
 
-  if (!isCheckInExists) {
-    throw new AppError(404, 'Check-in does not exist');
+  if (!metric) {
+    throw new AppError(404, 'Metric not found for this user');
   }
 
-  // Determine proof type automatically
-  let proofType = isCheckInExists.proofType;
-
-  if (payload.note) {
-    proofType = 'text';
-  } else if (payload.photo) {
-    proofType = 'photo';
-  }
-
-  const updatedCheckIn = await CheckIn.findOneAndUpdate(
-    {
-      _id: id,
+  const checkInQuery = new QueryBuilder(
+    CheckIn.find({
       user: userId,
-    },
-    {
-      ...payload,
-      proofType,
-    },
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
+      metric: metricId,
+    }),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
 
-  if (!updatedCheckIn) {
-    throw new AppError(400, 'Check-in update failed');
-  }
+  const meta = await checkInQuery.countTotal();
+  const result = await checkInQuery.modelQuery;
 
-  return updatedCheckIn;
-};
-
-const deleteCheckInFromDB = async (userId: string, id: string) => {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError(400, 'Invalid check-in ID');
-  }
-
-  const isCheckInExists = await CheckIn.findOne({
-    _id: id,
-    user: userId,
-  });
-
-  if (!isCheckInExists) {
-    throw new AppError(404, 'Check-in not found');
-  }
-
-  const result = await CheckIn.findOneAndDelete({
-    _id: id,
-    user: userId,
-  });
-
-  if (!result) {
-    throw new AppError(400, 'Failed to delete check-in');
-  }
-
-  return result;
+  return { meta, result };
 };
 
 export const CheckInServices = {
   createCheckInIntoDB,
-  getMyCheckInsFromDB,
   getCheckInsByMetricFromDB,
-  getCheckInByIdFromDB,
-  updateCheckInIntoDB,
-  deleteCheckInFromDB,
+  getCheckInsByUserFromDB,
 };

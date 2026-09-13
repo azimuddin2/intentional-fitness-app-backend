@@ -1,5 +1,4 @@
 import { ObjectId } from 'mongoose';
-
 import { TUser } from '../user/user.interface';
 import { TMetric } from '../metrics/metrics.interface';
 
@@ -11,7 +10,7 @@ export type TCheckIn = {
   proofType?: 'text' | 'photo';
   note?: string;
   photo?: string;
-  checkInDate: string;
+  checkInDate: Date;
 
   createdAt?: string;
   updatedAt?: string;
