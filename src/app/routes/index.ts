@@ -15,6 +15,7 @@ import { ProgramExerciseRoutes } from '../modules/programExercise/programExercis
 import { GoalRoutes } from '../modules/goal/goal.route';
 import { MetricRoutes } from '../modules/metrics/metrics.route';
 import { CheckInRoutes } from '../modules/checkIn/checkIn.route';
+import { WeeklyJournalRoutes } from '../modules/weeklyJournal/weeklyJournal.route';
 
 const router = Router();
 
@@ -68,10 +69,6 @@ const moduleRoutes = [
     route: ProgramExerciseRoutes,
   },
   {
-    path: '/weekly-journal-tasks',
-    route: WeeklyJournalTaskRoutes,
-  },
-  {
     path: '/goals',
     route: GoalRoutes,
   },
@@ -82,6 +79,14 @@ const moduleRoutes = [
   {
     path: '/check-ins',
     route: CheckInRoutes,
+  },
+  {
+    path: '/weekly-journal-tasks',
+    route: WeeklyJournalTaskRoutes,
+  },
+  {
+    path: '/weekly-journals',
+    route: WeeklyJournalRoutes,
   },
 ];
 

@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { WellnessStatus } from './weeklyJournal.constant';
 
 const objectIdSchema = z.string().refine((val) => Types.ObjectId.isValid(val), {
-  message: 'Invalid category id',
+  message: 'Invalid task id',
 });
 
 const updateReflectionValidationSchema = z.object({
@@ -28,7 +28,7 @@ const updateReflectionValidationSchema = z.object({
 });
 
 const dailyTaskValidationSchema = z.object({
-  category: objectIdSchema,
+  task: objectIdSchema,
   completed: z.boolean({
     required_error: 'Completed status is required',
     invalid_type_error: 'Completed must be a boolean',

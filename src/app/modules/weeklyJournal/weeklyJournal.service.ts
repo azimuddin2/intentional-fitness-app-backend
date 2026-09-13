@@ -107,7 +107,9 @@ const getAllWeeksByClientFromDB = async (
     WeeklyJournal.find({
       client: clientId,
       isDeleted: false,
-    }),
+    }).select('weekNumber startDate endDate isCurrent createdAt') as ReturnType<
+      typeof WeeklyJournal.find
+    >,
     query,
   )
     .filter()

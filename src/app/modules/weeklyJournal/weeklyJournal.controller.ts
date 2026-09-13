@@ -4,7 +4,7 @@ import sendResponse from '../../utils/sendResponse';
 import { WeeklyJournalServices } from './weeklyJournal.service';
 
 const createNewWeek = catchAsync(async (req: Request, res: Response) => {
-  const clientId = req.user._id;
+  const clientId = req.user.userId;
 
   const result = await WeeklyJournalServices.createNewWeekIntoDB(clientId);
 
@@ -17,9 +17,8 @@ const createNewWeek = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllWeeksByClient = catchAsync(async (req: Request, res: Response) => {
-  // role অনুযায়ী clientId ঠিক করা — user হলে নিজের, trainer হলে params থেকে
   const clientId =
-    req.user.role === 'trainer' ? req.params.clientId : req.user._id;
+    req.user.role === 'trainer' ? req.params.clientId : req.user.userId;
 
   const result = await WeeklyJournalServices.getAllWeeksByClientFromDB(
     clientId,
