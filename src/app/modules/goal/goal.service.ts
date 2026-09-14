@@ -14,32 +14,7 @@ const createGoalIntoDB = async (userId: string, payload: TGoal) => {
   return result;
 };
 
-const getMyGoalsFromDB = async (
-  userId: string,
-  query: Record<string, unknown>,
-) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    throw new AppError(400, 'Invalid user ID');
-  }
-
-  const goalQuery = new QueryBuilder(
-    Goal.find({
-      user: userId,
-    }),
-    query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
-
-  const meta = await goalQuery.countTotal();
-  const result = await goalQuery.modelQuery;
-
-  return { meta, result };
-};
-
-const getGoalByUserFromDB = async (
+const getGoalsFromDB = async (
   userId: string,
   query: Record<string, unknown>,
 ) => {
@@ -131,8 +106,7 @@ const deleteGoalFromDB = async (id: string) => {
 
 export const GoalServices = {
   createGoalIntoDB,
-  getMyGoalsFromDB,
-  getGoalByUserFromDB,
+  getGoalsFromDB,
   getGoalByIdFromDB,
   updateGoalIntoDB,
   markAsFavoriteIntoDB,

@@ -18,7 +18,7 @@ const createGoal = catchAsync(async (req: Request, res: Response) => {
 
 const getMyGoals = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.userId;
-  const result = await GoalServices.getMyGoalsFromDB(userId, req.query);
+  const result = await GoalServices.getGoalsFromDB(userId, req.query);
 
   sendResponse(res, {
     statusCode: 200,
@@ -35,7 +35,7 @@ const getGoalByUser = catchAsync(async (req: Request, res: Response) => {
   if (!userId) {
     throw new AppError(400, 'User ID is required');
   }
-  const result = await GoalServices.getGoalByUserFromDB(userId, req.query);
+  const result = await GoalServices.getGoalsFromDB(userId, req.query);
 
   sendResponse(res, {
     statusCode: 200,
