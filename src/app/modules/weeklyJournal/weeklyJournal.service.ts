@@ -3,33 +3,37 @@ import AppError from '../../errors/AppError';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { WeeklyJournal } from './weeklyJournal.model';
 import { User } from '../user/user.model';
-import { TWellnessStatus } from './weeklyJournal.interface';
+import {
+  TSubmitDailyEntryPayload,
+  TUpdateWeekSummaryPayload,
+  TWellnessStatus,
+} from './weeklyJournal.interface';
 import { WeeklyJournalTask } from '../weeklyJournalTask/weeklyJournalTask.model';
 
-const createNewWeekIntoDB = async (clientId: string) => {
-  if (!clientId || !mongoose.Types.ObjectId.isValid(clientId)) {
-    throw new AppError(400, 'Invalid client ID');
+const createNewWeekIntoDB = async (userId: string) => {
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
-  const client = await User.findById(clientId);
+  const user = await User.findById(userId);
 
-  if (!client) {
-    throw new AppError(404, 'Client not found');
+  if (!user) {
+    throw new AppError(404, 'User not found');
   }
 
-  if (client.isDeleted) {
-    throw new AppError(400, 'This client account has been deleted');
+  if (user.isDeleted) {
+    throw new AppError(400, 'This user account has been deleted');
   }
 
-  if (!client.trainer) {
-    throw new AppError(400, 'This client is not linked to any trainer');
+  if (!user.trainer) {
+    throw new AppError(400, 'This user is not linked to any trainer');
   }
 
-  const trainerId = client.trainer;
+  const trainerId = user.trainer;
 
   /* ____________________ BLOCK IF AN ACTIVE WEEK ALREADY EXISTS ____________________ */
   const existingCurrentWeek = await WeeklyJournal.findOne({
-    client: clientId,
+    user: userId,
     isCurrent: true,
     isDeleted: false,
   });
@@ -43,7 +47,7 @@ const createNewWeekIntoDB = async (clientId: string) => {
 
   /* ____________________ FIND LAST WEEK (FOR NUMBERING/DATES) ____________________ */
   const lastWeek = await WeeklyJournal.findOne({
-    client: clientId,
+    user: userId,
     isDeleted: false,
   }).sort({ weekNumber: -1 });
 
@@ -79,7 +83,7 @@ const createNewWeekIntoDB = async (clientId: string) => {
   }));
 
   const result = await WeeklyJournal.create({
-    client: clientId,
+    user: userId,
     trainer: trainerId,
     weekNumber,
     startDate,
@@ -95,17 +99,17 @@ const createNewWeekIntoDB = async (clientId: string) => {
   return result;
 };
 
-const getAllWeeksByClientFromDB = async (
-  clientId: string,
+const getAllWeeksFromDB = async (
+  userId: string,
   query: Record<string, unknown>,
 ) => {
-  if (!clientId || !mongoose.Types.ObjectId.isValid(clientId)) {
-    throw new AppError(400, 'Invalid client ID');
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
   const weeklyJournalQuery = new QueryBuilder(
     WeeklyJournal.find({
-      client: clientId,
+      user: userId,
       isDeleted: false,
     }).select('weekNumber startDate endDate isCurrent createdAt') as ReturnType<
       typeof WeeklyJournal.find
@@ -140,18 +144,14 @@ const getSingleWeekFromDB = async (weekId: string) => {
   return result;
 };
 
-const updateReflectionIntoDB = async (
+const updateWeekSummaryIntoDB = async (
   weekId: string,
-  clientId: string,
-  payload: {
-    insightFromSession?: string;
-    feelingAfterAppointment?: string;
-    goalsQuestionsConcerns?: string;
-  },
+  userId: string,
+  payload: TUpdateWeekSummaryPayload,
 ) => {
   const isWeekExists = await WeeklyJournal.findOne({
     _id: weekId,
-    client: clientId,
+    user: userId,
   });
 
   if (!isWeekExists) {
@@ -162,48 +162,30 @@ const updateReflectionIntoDB = async (
     throw new AppError(400, 'This week has been deleted');
   }
 
-  const hasAtLeastOneField = Object.values(payload).some(
-    (value) => value !== undefined,
-  );
+  const updatedWeek = await WeeklyJournal.findByIdAndUpdate(weekId, payload, {
+    new: true,
+    runValidators: true,
+  });
 
-  if (!hasAtLeastOneField) {
-    throw new AppError(400, 'At least one field is required to update');
+  if (!updatedWeek) {
+    throw new AppError(400, 'Failed to update week summary');
   }
 
-  try {
-    const updatedWeek = await WeeklyJournal.findByIdAndUpdate(weekId, payload, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updatedWeek) {
-      throw new AppError(400, 'Failed to update reflection');
-    }
-
-    return updatedWeek;
-  } catch (error: any) {
-    console.error('updateReflectionIntoDB Error:', error);
-    throw new AppError(500, 'Failed to update reflection');
-  }
+  return updatedWeek;
 };
 
 const submitDailyEntryIntoDB = async (
   weekId: string,
-  clientId: string,
-  payload: {
-    date: string;
-    notes?: string;
-    tasks: { task: string; completed: boolean }[];
-    wellness?: {
-      sleepQuality?: TWellnessStatus;
-      emotionalStresses?: TWellnessStatus;
-      foodQuality?: TWellnessStatus;
-    };
-  },
+  userId: string,
+  payload: TSubmitDailyEntryPayload,
 ) => {
   /* ____________________ VALIDATE IDS ____________________ */
   if (!weekId || !mongoose.Types.ObjectId.isValid(weekId)) {
     throw new AppError(400, 'Invalid week ID');
+  }
+
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
   /* ____________________ VALIDATE DATE ____________________ */
@@ -218,7 +200,7 @@ const submitDailyEntryIntoDB = async (
   /* ____________________ VALIDATE OWNERSHIP ____________________ */
   const week = await WeeklyJournal.findOne({
     _id: weekId,
-    client: clientId,
+    user: userId,
   });
 
   if (!week) {
@@ -262,13 +244,20 @@ const submitDailyEntryIntoDB = async (
       : existingTask;
   });
 
+  /* ____________________ CLEAN WELLNESS (remove undefined values) ____________________ */
+  const cleanedWellness = payload.wellness
+    ? Object.fromEntries(
+        Object.entries(payload.wellness).filter(([, v]) => v !== undefined),
+      )
+    : {};
+
   try {
     /* ____________________ UPDATE DAILY ENTRY ____________________ */
     targetEntry.notes = payload.notes ?? targetEntry.notes;
     targetEntry.tasks = updatedTasks as typeof targetEntry.tasks;
     targetEntry.wellness = {
       ...targetEntry.wellness,
-      ...payload.wellness,
+      ...cleanedWellness,
     };
     targetEntry.isSubmitted = true;
 
@@ -283,8 +272,8 @@ const submitDailyEntryIntoDB = async (
 
 export const WeeklyJournalServices = {
   createNewWeekIntoDB,
-  getAllWeeksByClientFromDB,
+  getAllWeeksFromDB,
   getSingleWeekFromDB,
-  updateReflectionIntoDB,
+  updateWeekSummaryIntoDB,
   submitDailyEntryIntoDB,
 };

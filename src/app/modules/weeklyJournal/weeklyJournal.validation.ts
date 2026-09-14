@@ -6,24 +6,26 @@ const objectIdSchema = z.string().refine((val) => Types.ObjectId.isValid(val), {
   message: 'Invalid task id',
 });
 
-const updateReflectionValidationSchema = z.object({
+const updateWeekSummaryValidationSchema = z.object({
   body: z.object({
     insightFromSession: z
-      .string({ invalid_type_error: 'Insight from session must be a string' })
-      .trim()
-      .optional(),
+      .string({
+        required_error: 'Insight from session is required',
+        invalid_type_error: 'Insight from session must be a string',
+      })
+      .trim(),
     feelingAfterAppointment: z
       .string({
+        required_error: 'Feeling after appointment is required',
         invalid_type_error: 'Feeling after appointment must be a string',
       })
-      .trim()
-      .optional(),
+      .trim(),
     goalsQuestionsConcerns: z
       .string({
+        required_error: 'Goals, questions, concerns is required',
         invalid_type_error: 'Goals, questions, concerns must be a string',
       })
-      .trim()
-      .optional(),
+      .trim(),
   }),
 });
 
@@ -75,6 +77,6 @@ const submitDailyEntryValidationSchema = z.object({
 });
 
 export const WeeklyJournalValidations = {
-  updateReflectionValidationSchema,
+  updateWeekSummaryValidationSchema,
   submitDailyEntryValidationSchema,
 };

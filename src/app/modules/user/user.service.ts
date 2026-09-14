@@ -13,6 +13,7 @@ import { generateOtp } from '../../utils/generateOtp';
 import moment from 'moment';
 import httpStatus from 'http-status';
 import { generateTemporaryPassword } from './user.utils';
+import { WeeklyJournalTaskService } from '../weeklyJournalTask/weeklyJournalTask.service';
 
 const signupUserIntoDB = async (payload: TUser) => {
   // 1. Check if user already exists
@@ -39,6 +40,8 @@ const signupUserIntoDB = async (payload: TUser) => {
 
   // 4. Create user in DB
   const result = await User.create(userData);
+
+  await WeeklyJournalTaskService.seedDefaultTasksIntoDB(result._id.toString());
 
   // 5. Create JWT token (optional for next step)
   const jwtPayload: TJwtPayload = {

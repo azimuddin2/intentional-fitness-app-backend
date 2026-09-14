@@ -4,9 +4,8 @@ import sendResponse from '../../utils/sendResponse';
 import { WeeklyJournalServices } from './weeklyJournal.service';
 
 const createNewWeek = catchAsync(async (req: Request, res: Response) => {
-  const clientId = req.user.userId;
-
-  const result = await WeeklyJournalServices.createNewWeekIntoDB(clientId);
+  const userId = req.user.userId;
+  const result = await WeeklyJournalServices.createNewWeekIntoDB(userId);
 
   sendResponse(res, {
     statusCode: 201,
@@ -16,12 +15,32 @@ const createNewWeek = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllWeeksByClient = catchAsync(async (req: Request, res: Response) => {
-  const clientId =
-    req.user.role === 'trainer' ? req.params.clientId : req.user.userId;
+const getMyWeeks = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
 
-  const result = await WeeklyJournalServices.getAllWeeksByClientFromDB(
-    clientId,
+  const result = await WeeklyJournalServices.getAllWeeksFromDB(
+    userId,
+    req.query,
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Weekly journals retrieved successfully',
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
+const getWeeksByUserId = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
+  const result = await WeeklyJournalServices.getAllWeeksFromDB(
+    userId,
     req.query,
   );
 
@@ -47,31 +66,31 @@ const getSingleWeek = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updateReflection = catchAsync(async (req: Request, res: Response) => {
+const updateWeekSummary = catchAsync(async (req: Request, res: Response) => {
   const { weekId } = req.params;
-  const clientId = req.user._id;
+  const userId = req.user.userId;
 
-  const result = await WeeklyJournalServices.updateReflectionIntoDB(
+  const result = await WeeklyJournalServices.updateWeekSummaryIntoDB(
     weekId,
-    clientId,
+    userId,
     req.body,
   );
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Reflection updated successfully',
+    message: 'Week summary updated successfully',
     data: result,
   });
 });
 
 const submitDailyEntry = catchAsync(async (req: Request, res: Response) => {
   const { weekId } = req.params;
-  const clientId = req.user._id;
+  const userId = req.user.userId;
 
   const result = await WeeklyJournalServices.submitDailyEntryIntoDB(
     weekId,
-    clientId,
+    userId,
     req.body,
   );
 
@@ -85,8 +104,10 @@ const submitDailyEntry = catchAsync(async (req: Request, res: Response) => {
 
 export const WeeklyJournalController = {
   createNewWeek,
-  getAllWeeksByClient,
+  getMyWeeks,
+  getWeeksByUserId,
   getSingleWeek,
-  updateReflection,
+  updateWeekSummary,
+
   submitDailyEntry,
 };

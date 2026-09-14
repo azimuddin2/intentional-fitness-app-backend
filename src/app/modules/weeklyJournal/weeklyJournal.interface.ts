@@ -23,7 +23,7 @@ export type TDailyEntry = {
 
 export type TWeeklyJournal = {
   _id: ObjectId;
-  client: ObjectId | TUser;
+  user: ObjectId | TUser;
   trainer: ObjectId | TUser;
   weekNumber: number;
   startDate: Date;
@@ -34,4 +34,23 @@ export type TWeeklyJournal = {
   dailyEntries: TDailyEntry[];
   isCurrent: boolean;
   isDeleted: boolean;
+};
+
+/* ____________________ API PAYLOAD TYPES (DTOs) ____________________ */
+
+export type TSubmitDailyEntryPayload = {
+  date: string;
+  notes?: string;
+  tasks: { task: string; completed: boolean }[];
+  wellness?: {
+    sleepQuality?: TWellnessStatus;
+    emotionalStresses?: TWellnessStatus;
+    foodQuality?: TWellnessStatus;
+  };
+};
+
+export type TUpdateWeekSummaryPayload = {
+  insightFromSession: string;
+  feelingAfterAppointment: string;
+  goalsQuestionsConcerns: string;
 };

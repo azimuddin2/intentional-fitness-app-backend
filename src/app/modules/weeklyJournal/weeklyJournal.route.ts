@@ -6,43 +6,33 @@ import { WeeklyJournalValidations } from './weeklyJournal.validation';
 
 const router = express.Router();
 
-// Add Week (শুধু client/user নিজের জন্য বানাতে পারবে)
 router.post(
   '/create-week',
   auth('user'),
   WeeklyJournalController.createNewWeek,
 );
 
-// Weeks List — client নিজের জন্য
-router.get(
-  '/my-weeks',
-  auth('user'),
-  WeeklyJournalController.getAllWeeksByClient,
-);
+router.get('/my-weeks', auth('user'), WeeklyJournalController.getMyWeeks);
 
-// Weeks List — trainer কোনো নির্দিষ্ট client-এর জন্য
 router.get(
-  '/client/:clientId/weeks',
+  '/user/:userId/weeks',
   auth('trainer'),
-  WeeklyJournalController.getAllWeeksByClient,
+  WeeklyJournalController.getWeeksByUserId,
 );
 
-// একটা নির্দিষ্ট Week-এর ডিটেইল (client + trainer দুইজনই দেখতে পারবে)
 router.get(
   '/:weekId',
   auth('user', 'trainer'),
   WeeklyJournalController.getSingleWeek,
 );
 
-// Reflection (Insight/Feeling/Goals) আপডেট — শুধু client
 router.patch(
-  '/:weekId/reflection',
+  '/:weekId/notes',
   auth('user'),
-  validateRequest(WeeklyJournalValidations.updateReflectionValidationSchema),
-  WeeklyJournalController.updateReflection,
+  validateRequest(WeeklyJournalValidations.updateWeekSummaryValidationSchema),
+  WeeklyJournalController.updateWeekSummary,
 );
 
-// Daily Entry Submit (Notes+Tasks+Wellness) — শুধু client
 router.patch(
   '/:weekId/daily-entry',
   auth('user'),

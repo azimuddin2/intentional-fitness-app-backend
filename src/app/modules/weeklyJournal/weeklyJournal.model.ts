@@ -6,6 +6,36 @@ import {
 } from './weeklyJournal.interface';
 import { WellnessStatus } from './weeklyJournal.constant';
 
+const wellnessSchema = new Schema(
+  {
+    sleepQuality: {
+      type: String,
+      enum: {
+        values: WellnessStatus,
+        message: '{VALUE} is not valid',
+      },
+      default: null,
+    },
+    emotionalStresses: {
+      type: String,
+      enum: {
+        values: WellnessStatus,
+        message: '{VALUE} is not valid',
+      },
+      default: null,
+    },
+    foodQuality: {
+      type: String,
+      enum: {
+        values: WellnessStatus,
+        message: '{VALUE} is not valid',
+      },
+      default: null,
+    },
+  },
+  { _id: false },
+);
+
 const dailyTaskSchema = new Schema<TDailyTask>(
   {
     task: {
@@ -36,27 +66,8 @@ const dailyEntrySchema = new Schema<TDailyEntry>(
       default: [],
     },
     wellness: {
-      sleepQuality: {
-        type: String,
-        enum: {
-          values: WellnessStatus,
-          message: '{VALUE} is not valid',
-        },
-      },
-      emotionalStresses: {
-        type: String,
-        enum: {
-          values: WellnessStatus,
-          message: '{VALUE} is not valid',
-        },
-      },
-      foodQuality: {
-        type: String,
-        enum: {
-          values: WellnessStatus,
-          message: '{VALUE} is not valid',
-        },
-      },
+      type: wellnessSchema,
+      default: () => ({}),
     },
     isSubmitted: {
       type: Boolean,
@@ -68,7 +79,7 @@ const dailyEntrySchema = new Schema<TDailyEntry>(
 
 const weeklyJournalSchema = new Schema<TWeeklyJournal>(
   {
-    client: {
+    user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -120,9 +131,9 @@ const weeklyJournalSchema = new Schema<TWeeklyJournal>(
   },
 );
 
-weeklyJournalSchema.index({ client: 1, weekNumber: 1 }, { unique: true });
+weeklyJournalSchema.index({ user: 1, weekNumber: 1 }, { unique: true });
 
-weeklyJournalSchema.index({ client: 1, isCurrent: 1 });
+weeklyJournalSchema.index({ user: 1, isCurrent: 1 });
 
 export const WeeklyJournal = model<TWeeklyJournal>(
   'WeeklyJournal',
