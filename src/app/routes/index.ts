@@ -17,6 +17,7 @@ import { MetricRoutes } from '../modules/metrics/metrics.route';
 import { CheckInRoutes } from '../modules/checkIn/checkIn.route';
 import { WeeklyJournalRoutes } from '../modules/weeklyJournal/weeklyJournal.route';
 import { DocRoutes } from '../modules/doc/doc.route';
+import { StabilizeScheduleRoutes } from '../modules/stabilizeSchedule/stabilizeSchedule.route';
 
 const router = Router();
 
@@ -60,6 +61,10 @@ const moduleRoutes = [
   {
     path: '/stabilize-exercise',
     route: StabilizeExerciseRoutes,
+  },
+  {
+    path: '/stabilize-schedule',
+    route: StabilizeScheduleRoutes,
   },
   {
     path: '/training-programs',

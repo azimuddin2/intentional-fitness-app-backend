@@ -1,20 +1,17 @@
 import mongoose from 'mongoose';
 import AppError from '../../errors/AppError';
-import {
-  TScheduledExercise,
-  TSourceType,
-  TExerciseSourceType,
-} from './schedule.interface';
-import { Schedule } from './schedule.model';
-import { verifyExercises, verifySource } from './schedule.utils';
+import { TStabilizeScheduledExercise } from './stabilizeSchedule.interface';
+import { StabilizeSchedule } from './stabilizeSchedule.model';
+import { verifyCategory, verifyExercises } from './stabilizeSchedule.utils';
 
-const createScheduleIntoDB = async (
+/**
+ * Creating a new schedule — assigning an exercise for the first time on a specific date.
+ */
+const createStabilizeScheduleIntoDB = async (
   trainerId: string,
   payload: {
     user: string;
-    sourceType: TSourceType;
-    source: string;
-    exerciseSourceType: TExerciseSourceType;
+    category: string;
     exercises: string[];
     date: Date;
   },
@@ -23,31 +20,24 @@ const createScheduleIntoDB = async (
     throw new AppError(400, 'Invalid user ID');
   }
 
-  if (!payload.source || !mongoose.Types.ObjectId.isValid(payload.source)) {
-    throw new AppError(400, 'Invalid source ID');
+  if (!payload.category || !mongoose.Types.ObjectId.isValid(payload.category)) {
+    throw new AppError(400, 'Invalid category ID');
   }
 
-  await verifySource(
-    trainerId,
-    payload.user,
-    payload.sourceType,
-    payload.source,
-  );
+  await verifyCategory(trainerId, payload.user, payload.category);
 
   await verifyExercises(
     trainerId,
     payload.user,
-    payload.source,
-    payload.exerciseSourceType,
+    payload.category,
     payload.exercises,
   );
 
-  const isScheduleExists = await Schedule.findOne({
+  const isScheduleExists = await StabilizeSchedule.findOne({
     trainer: trainerId,
     user: payload.user,
-    source: payload.source,
+    category: payload.category,
     date: payload.date,
-    isDeleted: false,
   });
 
   if (isScheduleExists) {
@@ -57,19 +47,16 @@ const createScheduleIntoDB = async (
     );
   }
 
-  const scheduledExercises: TScheduledExercise[] = payload.exercises.map(
-    (exerciseId) => ({
+  const scheduledExercises: TStabilizeScheduledExercise[] =
+    payload.exercises.map((exerciseId) => ({
       exercise: exerciseId as any,
-      exerciseSourceType: payload.exerciseSourceType,
       isCompleted: false,
-    }),
-  );
+    }));
 
-  const result = await Schedule.create({
+  const result = await StabilizeSchedule.create({
     trainer: trainerId,
     user: payload.user,
-    sourceType: payload.sourceType,
-    source: payload.source,
+    category: payload.category,
     exercises: scheduledExercises,
     date: payload.date,
   });
@@ -81,20 +68,21 @@ const createScheduleIntoDB = async (
   return result;
 };
 
-const addExerciseToScheduleIntoDB = async (
+/**
+ * Adding a new exercise to an existing schedule (for the same date) — excluding duplicates.
+ */
+const addExerciseToStabilizeScheduleIntoDB = async (
   scheduleId: string,
   trainerId: string,
-  exerciseSourceType: TExerciseSourceType,
   exerciseIds: string[],
 ) => {
   if (!scheduleId || !mongoose.Types.ObjectId.isValid(scheduleId)) {
     throw new AppError(400, 'Invalid schedule ID');
   }
 
-  const schedule = await Schedule.findOne({
+  const schedule = await StabilizeSchedule.findOne({
     _id: scheduleId,
     trainer: trainerId,
-    isDeleted: false,
   });
 
   if (!schedule) {
@@ -104,8 +92,7 @@ const addExerciseToScheduleIntoDB = async (
   await verifyExercises(
     trainerId,
     schedule.user.toString(),
-    schedule.source.toString(),
-    exerciseSourceType,
+    schedule.category.toString(),
     exerciseIds,
   );
 
@@ -115,13 +102,11 @@ const addExerciseToScheduleIntoDB = async (
 
   const newExerciseIds = exerciseIds.filter((id) => !existingIds.includes(id));
 
-  const newScheduledExercises: TScheduledExercise[] = newExerciseIds.map(
-    (exerciseId) => ({
+  const newScheduledExercises: TStabilizeScheduledExercise[] =
+    newExerciseIds.map((exerciseId) => ({
       exercise: exerciseId as any,
-      exerciseSourceType,
       isCompleted: false,
-    }),
-  );
+    }));
 
   schedule.exercises.push(...(newScheduledExercises as any));
   await schedule.save();
@@ -129,7 +114,10 @@ const addExerciseToScheduleIntoDB = async (
   return schedule;
 };
 
-const removeExerciseFromScheduleIntoDB = async (
+/**
+ * Schedule থেকে একটা নির্দিষ্ট Exercise Remove করা
+ */
+const removeExerciseFromStabilizeScheduleIntoDB = async (
   scheduleId: string,
   trainerId: string,
   exerciseId: string,
@@ -142,7 +130,7 @@ const removeExerciseFromScheduleIntoDB = async (
     throw new AppError(400, 'Invalid exercise ID');
   }
 
-  const schedule = await Schedule.findOne({
+  const schedule = await StabilizeSchedule.findOne({
     _id: scheduleId,
     trainer: trainerId,
     isDeleted: false,
@@ -176,17 +164,17 @@ const removeExerciseFromScheduleIntoDB = async (
   return schedule;
 };
 
-const getScheduleByDateFromDB = async (
-  clientId: string,
-  sourceId: string,
+const getStabilizeScheduleByDateFromDB = async (
+  userId: string,
+  categoryId: string,
   date: string,
 ) => {
-  if (!clientId || !mongoose.Types.ObjectId.isValid(clientId)) {
-    throw new AppError(400, 'Invalid client ID');
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
-  if (!sourceId || !mongoose.Types.ObjectId.isValid(sourceId)) {
-    throw new AppError(400, 'Invalid source ID');
+  if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
+    throw new AppError(400, 'Invalid category ID');
   }
 
   const targetDate = new Date(date);
@@ -200,19 +188,18 @@ const getScheduleByDateFromDB = async (
   const nextDate = new Date(targetDate);
   nextDate.setDate(nextDate.getDate() + 1);
 
-  const result = await Schedule.findOne({
-    user: clientId,
-    source: sourceId,
+  const result = await StabilizeSchedule.findOne({
+    user: userId,
+    category: categoryId,
     date: { $gte: targetDate, $lt: nextDate },
-    isDeleted: false,
   })
-    .populate('source')
+    .populate('category')
     .populate('exercises.exercise');
 
   return result;
 };
 
-const updateScheduledExerciseFeedbackIntoDB = async (
+const updateStabilizeScheduledExerciseFeedbackIntoDB = async (
   scheduleId: string,
   clientId: string,
   payload: {
@@ -232,7 +219,7 @@ const updateScheduledExerciseFeedbackIntoDB = async (
     throw new AppError(400, 'Invalid exercise ID');
   }
 
-  const schedule = await Schedule.findOne({
+  const schedule = await StabilizeSchedule.findOne({
     _id: scheduleId,
     user: clientId,
     isDeleted: false,
@@ -265,26 +252,18 @@ const updateScheduledExerciseFeedbackIntoDB = async (
   return schedule;
 };
 
-const deleteScheduleFromDB = async (id: string) => {
+const deleteStabilizeScheduleFromDB = async (id: string) => {
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
     throw new AppError(400, 'Invalid schedule ID');
   }
 
-  const isScheduleExists = await Schedule.findById(id);
+  const isScheduleExists = await StabilizeSchedule.findById(id);
 
   if (!isScheduleExists) {
     throw new AppError(404, 'Schedule not found');
   }
 
-  if (isScheduleExists.isDeleted) {
-    throw new AppError(400, 'Schedule is already deleted');
-  }
-
-  const result = await Schedule.findByIdAndUpdate(
-    id,
-    { isDeleted: true },
-    { new: true },
-  );
+  const result = await StabilizeSchedule.findByIdAndDelete(id);
 
   if (!result) {
     throw new AppError(400, 'Failed to delete schedule');
@@ -293,11 +272,11 @@ const deleteScheduleFromDB = async (id: string) => {
   return result;
 };
 
-export const ScheduleServices = {
-  createScheduleIntoDB,
-  addExerciseToScheduleIntoDB,
-  removeExerciseFromScheduleIntoDB,
-  getScheduleByDateFromDB,
-  updateScheduledExerciseFeedbackIntoDB,
-  deleteScheduleFromDB,
+export const StabilizeScheduleServices = {
+  createStabilizeScheduleIntoDB,
+  addExerciseToStabilizeScheduleIntoDB,
+  removeExerciseFromStabilizeScheduleIntoDB,
+  getStabilizeScheduleByDateFromDB,
+  updateStabilizeScheduledExerciseFeedbackIntoDB,
+  deleteStabilizeScheduleFromDB,
 };
