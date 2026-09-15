@@ -16,6 +16,7 @@ import { GoalRoutes } from '../modules/goal/goal.route';
 import { MetricRoutes } from '../modules/metrics/metrics.route';
 import { CheckInRoutes } from '../modules/checkIn/checkIn.route';
 import { WeeklyJournalRoutes } from '../modules/weeklyJournal/weeklyJournal.route';
+import { DocRoutes } from '../modules/doc/doc.route';
 
 const router = Router();
 
@@ -87,6 +88,10 @@ const moduleRoutes = [
   {
     path: '/weekly-journals',
     route: WeeklyJournalRoutes,
+  },
+  {
+    path: '/docs',
+    route: DocRoutes,
   },
 ];
 

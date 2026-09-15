@@ -5,7 +5,6 @@ import { DocServices } from './doc.service';
 import AppError from '../../errors/AppError';
 
 const createDoc = catchAsync(async (req: Request, res: Response) => {
-  // userId ekhon body theke asbe (req.body.user)
   const result = await DocServices.createDocIntoDB(req.body, req.file);
 
   sendResponse(res, {
@@ -16,8 +15,21 @@ const createDoc = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyDocs = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+  const result = await DocServices.getDocsFromDB(userId, req.query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'My docs retrieved successfully',
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
 const getDocsByUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.query.user as string;
+  const { userId } = req.params;
 
   if (!userId) {
     throw new AppError(400, 'User ID is required');
@@ -72,6 +84,7 @@ const deleteDoc = catchAsync(async (req: Request, res: Response) => {
 
 export const DocControllers = {
   createDoc,
+  getMyDocs,
   getDocsByUser,
   getDocById,
   updateDoc,
