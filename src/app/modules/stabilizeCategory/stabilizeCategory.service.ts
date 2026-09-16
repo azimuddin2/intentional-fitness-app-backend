@@ -3,11 +3,17 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { TStabilizeCategory } from './stabilizeCategory.interface';
 import { StabilizeCategory } from './stabilizeCategory.model';
+import { User } from '../user/user.model';
 
 const createStabilizeCategoryIntoDB = async (
   trainerId: string,
   payload: TStabilizeCategory,
 ) => {
+  const user = await User.findById(payload.user);
+  if (!user) {
+    throw new AppError(404, 'User not found');
+  }
+
   const isCategoryExists = await StabilizeCategory.findOne({
     name: payload.name,
     trainer: trainerId,

@@ -9,12 +9,18 @@ import { TProgramExercise } from './programExercise.interface';
 import { ProgramExercise } from './programExercise.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { UploadedFiles } from '../../interface/common.interface';
+import { User } from '../user/user.model';
 
 const createProgramExerciseIntoDB = async (
   trainerId: string,
   payload: TProgramExercise,
   files: any,
 ) => {
+  const user = await User.findById(payload.user);
+  if (!user) {
+    throw new AppError(404, 'User not found');
+  }
+
   const isProgramExists = await TrainingProgram.findOne({
     _id: payload.program,
     trainer: trainerId,

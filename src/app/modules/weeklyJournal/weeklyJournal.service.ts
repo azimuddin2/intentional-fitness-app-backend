@@ -6,7 +6,6 @@ import { User } from '../user/user.model';
 import {
   TSubmitDailyEntryPayload,
   TUpdateWeekSummaryPayload,
-  TWellnessStatus,
 } from './weeklyJournal.interface';
 import { WeeklyJournalTask } from '../weeklyJournalTask/weeklyJournalTask.model';
 

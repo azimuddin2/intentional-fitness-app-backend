@@ -3,10 +3,9 @@ import AppError from '../../errors/AppError';
 import { TStabilizeScheduledExercise } from './stabilizeSchedule.interface';
 import { StabilizeSchedule } from './stabilizeSchedule.model';
 import { verifyCategory, verifyExercises } from './stabilizeSchedule.utils';
+import { User } from '../user/user.model';
 
-/**
- * Creating a new schedule — assigning an exercise for the first time on a specific date.
- */
+// Creating a new schedule — assigning an exercise for the first time on a specific date.
 const createStabilizeScheduleIntoDB = async (
   trainerId: string,
   payload: {
@@ -18,6 +17,11 @@ const createStabilizeScheduleIntoDB = async (
 ) => {
   if (!payload.user || !mongoose.Types.ObjectId.isValid(payload.user)) {
     throw new AppError(400, 'Invalid user ID');
+  }
+
+  const user = await User.findById(payload.user);
+  if (!user) {
+    throw new AppError(404, 'User not found');
   }
 
   if (!payload.category || !mongoose.Types.ObjectId.isValid(payload.category)) {
@@ -68,9 +72,7 @@ const createStabilizeScheduleIntoDB = async (
   return result;
 };
 
-/**
- * Adding a new exercise to an existing schedule (for the same date) — excluding duplicates.
- */
+// Adding a new exercise to an existing schedule (for the same date) — excluding duplicates.
 const addExerciseToStabilizeScheduleIntoDB = async (
   scheduleId: string,
   trainerId: string,
@@ -114,54 +116,31 @@ const addExerciseToStabilizeScheduleIntoDB = async (
   return schedule;
 };
 
-/**
- * Schedule থেকে একটা নির্দিষ্ট Exercise Remove করা
- */
-const removeExerciseFromStabilizeScheduleIntoDB = async (
-  scheduleId: string,
-  trainerId: string,
-  exerciseId: string,
+const getAllStabilizeSchedulesFromDB = async (
+  userId: string,
+  categoryId: string,
 ) => {
-  if (!scheduleId || !mongoose.Types.ObjectId.isValid(scheduleId)) {
-    throw new AppError(400, 'Invalid schedule ID');
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
   }
 
-  if (!exerciseId || !mongoose.Types.ObjectId.isValid(exerciseId)) {
-    throw new AppError(400, 'Invalid exercise ID');
+  if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
+    throw new AppError(400, 'Invalid category ID');
   }
 
-  const schedule = await StabilizeSchedule.findOne({
-    _id: scheduleId,
-    trainer: trainerId,
-    isDeleted: false,
-  });
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
 
-  if (!schedule) {
-    throw new AppError(404, 'Schedule not found');
-  }
+  const result = await StabilizeSchedule.find({
+    user: userId,
+    category: categoryId,
+    date: { $gte: todayStart },
+  })
+    .populate('category')
+    .populate('exercises.exercise')
+    .sort({ date: 1 });
 
-  const exerciseExists = schedule.exercises.some(
-    (e) => (e.exercise as any).toString() === exerciseId,
-  );
-
-  if (!exerciseExists) {
-    throw new AppError(404, 'Exercise not found in this schedule');
-  }
-
-  if (schedule.exercises.length === 1) {
-    throw new AppError(
-      400,
-      'Cannot remove the last exercise. Delete the schedule instead.',
-    );
-  }
-
-  schedule.exercises = schedule.exercises.filter(
-    (e) => (e.exercise as any).toString() !== exerciseId,
-  ) as any;
-
-  await schedule.save();
-
-  return schedule;
+  return result;
 };
 
 const getStabilizeScheduleByDateFromDB = async (
@@ -199,9 +178,86 @@ const getStabilizeScheduleByDateFromDB = async (
   return result;
 };
 
+const getSingleScheduledExerciseFromDB = async (
+  scheduleId: string,
+  exerciseId: string,
+) => {
+  if (!scheduleId || !mongoose.Types.ObjectId.isValid(scheduleId)) {
+    throw new AppError(400, 'Invalid schedule ID');
+  }
+
+  if (!exerciseId || !mongoose.Types.ObjectId.isValid(exerciseId)) {
+    throw new AppError(400, 'Invalid exercise ID');
+  }
+
+  const schedule = await StabilizeSchedule.findOne({
+    _id: scheduleId,
+  }).populate('exercises.exercise');
+
+  if (!schedule) {
+    throw new AppError(404, 'Schedule not found');
+  }
+
+  const scheduledExercise = schedule.exercises.find(
+    (e) => (e.exercise as any)._id.toString() === exerciseId,
+  );
+
+  if (!scheduledExercise) {
+    throw new AppError(404, 'Exercise not found in this schedule');
+  }
+
+  return scheduledExercise;
+};
+
+const removeExerciseFromStabilizeScheduleIntoDB = async (
+  scheduleId: string,
+  trainerId: string,
+  exerciseId: string,
+) => {
+  if (!scheduleId || !mongoose.Types.ObjectId.isValid(scheduleId)) {
+    throw new AppError(400, 'Invalid schedule ID');
+  }
+
+  if (!exerciseId || !mongoose.Types.ObjectId.isValid(exerciseId)) {
+    throw new AppError(400, 'Invalid exercise ID');
+  }
+
+  const schedule = await StabilizeSchedule.findOne({
+    _id: scheduleId,
+    trainer: trainerId,
+  });
+
+  if (!schedule) {
+    throw new AppError(404, 'Schedule not found');
+  }
+
+  const exerciseExists = schedule.exercises.some(
+    (e) => (e.exercise as any).toString() === exerciseId,
+  );
+
+  if (!exerciseExists) {
+    throw new AppError(404, 'Exercise not found in this schedule');
+  }
+
+  if (schedule.exercises.length === 1) {
+    throw new AppError(
+      400,
+      'Cannot remove the last exercise. Delete the schedule instead.',
+    );
+  }
+
+  schedule.exercises = schedule.exercises.filter(
+    (e) => (e.exercise as any).toString() !== exerciseId,
+  ) as any;
+
+  await schedule.save();
+
+  return schedule;
+};
+
 const updateStabilizeScheduledExerciseFeedbackIntoDB = async (
   scheduleId: string,
-  clientId: string,
+  userId: string,
   payload: {
     exerciseId: string;
     ratePerceivedExertion?: number;
@@ -221,8 +277,7 @@ const updateStabilizeScheduledExerciseFeedbackIntoDB = async (
 
   const schedule = await StabilizeSchedule.findOne({
     _id: scheduleId,
-    user: clientId,
-    isDeleted: false,
+    user: userId,
   });
 
   if (!schedule) {
@@ -275,8 +330,10 @@ const deleteStabilizeScheduleFromDB = async (id: string) => {
 export const StabilizeScheduleServices = {
   createStabilizeScheduleIntoDB,
   addExerciseToStabilizeScheduleIntoDB,
-  removeExerciseFromStabilizeScheduleIntoDB,
+  getAllStabilizeSchedulesFromDB,
   getStabilizeScheduleByDateFromDB,
+  getSingleScheduledExerciseFromDB,
+  removeExerciseFromStabilizeScheduleIntoDB,
   updateStabilizeScheduledExerciseFeedbackIntoDB,
   deleteStabilizeScheduleFromDB,
 };

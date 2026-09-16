@@ -43,22 +43,18 @@ const addExerciseToStabilizeSchedule = catchAsync(
   },
 );
 
-const removeExerciseFromStabilizeSchedule = catchAsync(
+const getAllStabilizeSchedules = catchAsync(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { exerciseId } = req.body;
-    const trainerId = req.user.userId;
-
+    const { userId, categoryId } = req.params;
     const result =
-      await StabilizeScheduleServices.removeExerciseFromStabilizeScheduleIntoDB(
-        id,
-        trainerId,
-        exerciseId,
+      await StabilizeScheduleServices.getAllStabilizeSchedulesFromDB(
+        userId,
+        categoryId,
       );
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: 'Exercise removed from schedule successfully',
+      message: 'All upcoming schedules fetched successfully',
       data: result,
     });
   },
@@ -83,14 +79,54 @@ const getStabilizeScheduleByDate = catchAsync(
   },
 );
 
+const getSingleScheduledExercise = catchAsync(
+  async (req: Request, res: Response) => {
+    const { scheduleId, exerciseId } = req.params;
+
+    const result =
+      await StabilizeScheduleServices.getSingleScheduledExerciseFromDB(
+        scheduleId,
+        exerciseId,
+      );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Exercise fetched successfully',
+      data: result,
+    });
+  },
+);
+
+const removeExerciseFromStabilizeSchedule = catchAsync(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { exerciseId } = req.body;
+    const trainerId = req.user.userId;
+
+    const result =
+      await StabilizeScheduleServices.removeExerciseFromStabilizeScheduleIntoDB(
+        id,
+        trainerId,
+        exerciseId,
+      );
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Exercise removed from schedule successfully',
+      data: result,
+    });
+  },
+);
+
 const updateStabilizeScheduledExerciseFeedback = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const clientId = req.user.userId;
+    const userId = req.user.userId;
     const result =
       await StabilizeScheduleServices.updateStabilizeScheduledExerciseFeedbackIntoDB(
         id,
-        clientId,
+        userId,
         req.body,
       );
     sendResponse(res, {
@@ -119,8 +155,10 @@ const deleteStabilizeSchedule = catchAsync(
 export const StabilizeScheduleControllers = {
   createStabilizeSchedule,
   addExerciseToStabilizeSchedule,
-  removeExerciseFromStabilizeSchedule,
+  getAllStabilizeSchedules,
   getStabilizeScheduleByDate,
+  getSingleScheduledExercise,
+  removeExerciseFromStabilizeSchedule,
   updateStabilizeScheduledExerciseFeedback,
   deleteStabilizeSchedule,
 };

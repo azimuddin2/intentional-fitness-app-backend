@@ -3,11 +3,17 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { TTrainingProgram } from './trainingProgram.interface';
 import { TrainingProgram } from './trainingProgram.model';
+import { User } from '../user/user.model';
 
 const createTrainingProgramIntoDB = async (
   trainerId: string,
   payload: TTrainingProgram,
 ) => {
+  const user = await User.findById(payload.user);
+  if (!user) {
+    throw new AppError(404, 'User not found');
+  }
+
   const isCategoryExists = await TrainingProgram.findOne({
     name: payload.name,
     user: payload.user,

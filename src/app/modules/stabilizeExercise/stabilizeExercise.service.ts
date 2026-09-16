@@ -9,6 +9,7 @@ import { StabilizeCategory } from '../stabilizeCategory/stabilizeCategory.model'
 import { TStabilizeExercise } from './stabilizeExercise.interface';
 import { StabilizeExercise } from './stabilizeExercise.model';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { User } from '../user/user.model';
 
 const createStabilizeExerciseIntoDB = async (
   trainerId: string,
@@ -17,6 +18,11 @@ const createStabilizeExerciseIntoDB = async (
 ) => {
   if (!payload.user) {
     throw new AppError(400, 'User ID is required');
+  }
+
+  const user = await User.findById(payload.user);
+  if (!user) {
+    throw new AppError(404, 'User not found');
   }
 
   const isCategoryExists = await StabilizeCategory.findOne({

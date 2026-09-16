@@ -24,6 +24,18 @@ router.patch(
   StabilizeScheduleControllers.addExerciseToStabilizeSchedule,
 );
 
+router.get(
+  '/user/:userId/category/:categoryId/all',
+  auth('trainer', 'user'),
+  StabilizeScheduleControllers.getAllStabilizeSchedules,
+);
+
+router.get(
+  '/:scheduleId/exercise/:exerciseId',
+  auth('trainer', 'user'),
+  StabilizeScheduleControllers.getSingleScheduledExercise,
+);
+
 router.patch(
   '/:id/remove-exercise',
   auth('trainer'),
