@@ -37,7 +37,7 @@ router.get(
 );
 
 router.patch(
-  '/:id/remove-exercise',
+  '/:scheduleId/remove-exercise',
   auth('trainer'),
   StabilizeScheduleControllers.removeExerciseFromStabilizeSchedule,
 );
@@ -48,19 +48,19 @@ router.get(
   StabilizeScheduleControllers.getStabilizeScheduleByDate,
 );
 
+router.get(
+  '/today/category/:categoryId',
+  auth('user'),
+  StabilizeScheduleControllers.getTodayScheduleForUser,
+);
+
 router.patch(
-  '/:id/feedback',
+  '/:scheduleId/feedback',
   auth('user'),
   validateRequest(
     StabilizeScheduleValidations.updateStabilizeScheduledExerciseFeedbackValidationSchema,
   ),
   StabilizeScheduleControllers.updateStabilizeScheduledExerciseFeedback,
-);
-
-router.delete(
-  '/:id',
-  auth('trainer'),
-  StabilizeScheduleControllers.deleteStabilizeSchedule,
 );
 
 export const StabilizeScheduleRoutes = router;

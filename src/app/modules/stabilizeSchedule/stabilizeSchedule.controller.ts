@@ -79,6 +79,26 @@ const getStabilizeScheduleByDate = catchAsync(
   },
 );
 
+const getTodayScheduleForUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user.userId;
+    const { categoryId } = req.params;
+
+    const result =
+      await StabilizeScheduleServices.getTodayScheduleForUserFromDB(
+        userId,
+        categoryId,
+      );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Today's exercises fetched successfully",
+      data: result,
+    });
+  },
+);
+
 const getSingleScheduledExercise = catchAsync(
   async (req: Request, res: Response) => {
     const { scheduleId, exerciseId } = req.params;
@@ -100,13 +120,13 @@ const getSingleScheduledExercise = catchAsync(
 
 const removeExerciseFromStabilizeSchedule = catchAsync(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { scheduleId } = req.params;
     const { exerciseId } = req.body;
     const trainerId = req.user.userId;
 
     const result =
       await StabilizeScheduleServices.removeExerciseFromStabilizeScheduleIntoDB(
-        id,
+        scheduleId,
         trainerId,
         exerciseId,
       );
@@ -121,11 +141,11 @@ const removeExerciseFromStabilizeSchedule = catchAsync(
 
 const updateStabilizeScheduledExerciseFeedback = catchAsync(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { scheduleId } = req.params;
     const userId = req.user.userId;
     const result =
       await StabilizeScheduleServices.updateStabilizeScheduledExerciseFeedbackIntoDB(
-        id,
+        scheduleId,
         userId,
         req.body,
       );
@@ -138,27 +158,13 @@ const updateStabilizeScheduledExerciseFeedback = catchAsync(
   },
 );
 
-const deleteStabilizeSchedule = catchAsync(
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const result =
-      await StabilizeScheduleServices.deleteStabilizeScheduleFromDB(id);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Schedule deleted successfully',
-      data: result,
-    });
-  },
-);
-
 export const StabilizeScheduleControllers = {
   createStabilizeSchedule,
   addExerciseToStabilizeSchedule,
   getAllStabilizeSchedules,
   getStabilizeScheduleByDate,
+  getTodayScheduleForUser,
   getSingleScheduledExercise,
   removeExerciseFromStabilizeSchedule,
   updateStabilizeScheduledExerciseFeedback,
-  deleteStabilizeSchedule,
 };

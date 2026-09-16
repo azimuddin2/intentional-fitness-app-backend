@@ -178,6 +178,35 @@ const getStabilizeScheduleByDateFromDB = async (
   return result;
 };
 
+const getTodayScheduleForUserFromDB = async (
+  userId: string,
+  categoryId: string,
+) => {
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(400, 'Invalid user ID');
+  }
+
+  if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
+    throw new AppError(400, 'Invalid category ID');
+  }
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  const result = await StabilizeSchedule.findOne({
+    user: userId,
+    category: categoryId,
+    date: { $gte: todayStart, $lt: todayEnd },
+  })
+    .populate('category')
+    .populate('exercises.exercise');
+
+  return result;
+};
+
 const getSingleScheduledExerciseFromDB = async (
   scheduleId: string,
   exerciseId: string,
@@ -240,10 +269,9 @@ const removeExerciseFromStabilizeScheduleIntoDB = async (
   }
 
   if (schedule.exercises.length === 1) {
-    throw new AppError(
-      400,
-      'Cannot remove the last exercise. Delete the schedule instead.',
-    );
+    await StabilizeSchedule.findByIdAndDelete(scheduleId);
+
+    return null;
   }
 
   schedule.exercises = schedule.exercises.filter(
@@ -307,33 +335,13 @@ const updateStabilizeScheduledExerciseFeedbackIntoDB = async (
   return schedule;
 };
 
-const deleteStabilizeScheduleFromDB = async (id: string) => {
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError(400, 'Invalid schedule ID');
-  }
-
-  const isScheduleExists = await StabilizeSchedule.findById(id);
-
-  if (!isScheduleExists) {
-    throw new AppError(404, 'Schedule not found');
-  }
-
-  const result = await StabilizeSchedule.findByIdAndDelete(id);
-
-  if (!result) {
-    throw new AppError(400, 'Failed to delete schedule');
-  }
-
-  return result;
-};
-
 export const StabilizeScheduleServices = {
   createStabilizeScheduleIntoDB,
   addExerciseToStabilizeScheduleIntoDB,
   getAllStabilizeSchedulesFromDB,
   getStabilizeScheduleByDateFromDB,
+  getTodayScheduleForUserFromDB,
   getSingleScheduledExerciseFromDB,
   removeExerciseFromStabilizeScheduleIntoDB,
   updateStabilizeScheduledExerciseFeedbackIntoDB,
-  deleteStabilizeScheduleFromDB,
 };
