@@ -60,17 +60,8 @@ const programScheduleSchema = new Schema<TProgramSchedule>(
       type: Date,
       required: true,
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true },
-);
-
-programScheduleSchema.index(
-  { trainer: 1, user: 1, program: 1, date: 1 },
-  { unique: true },
 );
 
 export const ProgramSchedule = model<TProgramSchedule>(

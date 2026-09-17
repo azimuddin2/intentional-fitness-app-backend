@@ -25,7 +25,7 @@ router.patch(
 );
 
 router.get(
-  '/user/:userId/category/:categoryId/all',
+  '/user/:userId/program/:programId/all',
   auth('trainer', 'user'),
   ProgramScheduleControllers.getAllProgramSchedules,
 );
@@ -43,13 +43,13 @@ router.patch(
 );
 
 router.get(
-  '/user/:userId/category/:categoryId',
+  '/user/:userId/program/:programId',
   auth('trainer', 'user'),
   ProgramScheduleControllers.getProgramScheduleByDate,
 );
 
 router.get(
-  '/today/category/:categoryId',
+  '/today/program/:programId',
   auth('user'),
   ProgramScheduleControllers.getTodayScheduleForUser,
 );

@@ -17,5 +17,4 @@ export type TProgramSchedule = {
   program: ObjectId | TTrainingProgram;
   exercises: TProgramScheduledExercise[];
   date: Date;
-  isDeleted: boolean;
 };

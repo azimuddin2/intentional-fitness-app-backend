@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Trainer কর্তৃক Schedule তৈরি/exercise assign করার সময় ব্যবহার হবে
 const createProgramScheduleValidationSchema = z.object({
   body: z.object({
     user: z.string({
@@ -26,7 +25,6 @@ const createProgramScheduleValidationSchema = z.object({
   }),
 });
 
-// পুরনো Schedule-এ (একই date) নতুন exercise যোগ করার সময় ব্যবহার হবে
 const addExerciseToProgramScheduleValidationSchema = z.object({
   body: z.object({
     exercises: z
@@ -37,7 +35,6 @@ const addExerciseToProgramScheduleValidationSchema = z.object({
   }),
 });
 
-// Client কর্তৃক নির্দিষ্ট Exercise-এর completion/feedback দেওয়ার সময় ব্যবহার হবে
 const updateProgramScheduledExerciseFeedbackValidationSchema = z.object({
   body: z.object({
     exerciseId: z.string({
