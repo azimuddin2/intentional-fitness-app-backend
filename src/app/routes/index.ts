@@ -19,6 +19,8 @@ import { WeeklyJournalRoutes } from '../modules/weeklyJournal/weeklyJournal.rout
 import { DocRoutes } from '../modules/doc/doc.route';
 import { StabilizeScheduleRoutes } from '../modules/stabilizeSchedule/stabilizeSchedule.route';
 import { ProgramScheduleRoutes } from '../modules/programSchedule/programSchedule.route';
+import { MessageImageRoutes } from '../modules/messageImage/messageImage.route';
+import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 
 const router = Router();
 
@@ -102,6 +104,14 @@ const moduleRoutes = [
   {
     path: '/docs',
     route: DocRoutes,
+  },
+  {
+    path: '/message-images',
+    route: MessageImageRoutes,
+  },
+  {
+    path: '/dashboard',
+    route: DashboardRoutes,
   },
 ];
 

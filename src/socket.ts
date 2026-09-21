@@ -26,10 +26,6 @@ const initializeSocketIO = (server: HttpServer) => {
     return userTOSocketId.get(userid?.toString()) as string;
   }
 
-  function getUserId(socketid: string) {
-    return socketTOUserId.get(socketid?.toString()) as string;
-  }
-
   // Online users
   const onlineUser = new Set();
 
@@ -42,11 +38,6 @@ const initializeSocketIO = (server: HttpServer) => {
         socket.handshake.auth?.token || socket.handshake.headers?.token;
       //----------------------check Token and return user details-------------------------//
       const user: any = await getUserDetailsFromToken(token);
-
-      // if (!user) {
-      //   // io.emit('io-error', {success:false, message:'invalid Token'});
-      //   throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid token');
-      // }
 
       socket.join(user?._id?.toString());
 
@@ -65,10 +56,10 @@ const initializeSocketIO = (server: HttpServer) => {
       io.emit('onlineUser', Array.from(onlineUser));
 
       socket.on('message-page', async (data, callback) => {
-        const { userId } = data;
+        const { userId } = data || {};
 
         if (!userId) {
-          callbackFn(callback, {
+          return callbackFn(callback, {
             success: false,
             message: 'userId is required',
           });
@@ -77,29 +68,28 @@ const initializeSocketIO = (server: HttpServer) => {
         try {
           const receiverDetails: TUser | null = await User.findById(
             userId,
-          ).select('_id email role image fullName');
+          ).select('_id email role image name');
 
           if (!receiverDetails) {
-            callbackFn(callback, {
+            socket.emit('io-error', {
               success: false,
               message: 'user is not found!',
             });
-            io.emit('io-error', {
+            return callbackFn(callback, {
               success: false,
               message: 'user is not found!',
             });
           }
 
           const payload = {
-            _id: receiverDetails?._id,
-            name: receiverDetails?.name,
-            email: receiverDetails?.email,
-            profile: receiverDetails?.image,
-            role: receiverDetails?.role,
+            _id: receiverDetails._id,
+            name: receiverDetails.name,
+            email: receiverDetails.email,
+            profile: receiverDetails.image,
+            role: receiverDetails.role,
           };
-          const userSocket = getSocketId(user?._id?.toString());
 
-          io.to(userSocket).emit('user-details', payload);
+          socket.emit('user-details', payload);
 
           const getPreMessage = await Message.find({
             $or: [
@@ -108,36 +98,27 @@ const initializeSocketIO = (server: HttpServer) => {
             ],
           }).sort({ updatedAt: 1 });
 
-          console.log(getPreMessage);
-          io.to(userSocket).emit('message', getPreMessage || []);
+          socket.emit(`message-${userId}`, getPreMessage || []);
 
           // Notification
-          const allUnReaddMessage = await Message.countDocuments({
-            receiver: user?._id,
-            seen: false,
-          });
-          const variable = 'new-notifications::' + user?._id;
-          io.emit(variable, allUnReaddMessage);
-
-          const allUnReaddMessage2 = await Message.countDocuments({
-            receiver: userId,
-            seen: false,
-          });
-          const variable2 = 'new-notifications::' + userId;
-          io.emit(variable2, allUnReaddMessage2);
-
-          //end Notification//
+          const myId = user?._id?.toString();
+          const [myUnread, theirUnread] = await Promise.all([
+            Message.countDocuments({ receiver: user?._id, seen: false }),
+            Message.countDocuments({ receiver: userId, seen: false }),
+          ]);
+          io.to(myId).emit('new-notifications::' + myId, myUnread);
+          io.to(userId.toString()).emit(
+            'new-notifications::' + userId,
+            theirUnread,
+          );
         } catch (error: any) {
-          callbackFn(callback, {
-            success: false,
-            message: error.message,
-          });
-          io.emit('io-error', { success: false, message: error });
+          callbackFn(callback, { success: false, message: error.message });
+          socket.emit('io-error', { success: false, message: error.message });
           console.error('Error in message-page event:', error);
         }
       });
 
-      //----------------------chat list------------------------//
+      //---------------------- Chat List------------------------//
       socket.on('my-chat-list', async (data, callback) => {
         try {
           const chatList = await ChatServices.getMyChatList(user?._id);
@@ -155,7 +136,7 @@ const initializeSocketIO = (server: HttpServer) => {
         }
       });
 
-      //----------------------seen message-----------------------//
+      //---------------------- Seen Message-----------------------//
       socket.on('seen', async ({ chatId }, callback) => {
         if (!chatId) {
           callbackFn(callback, {
@@ -237,7 +218,7 @@ const initializeSocketIO = (server: HttpServer) => {
             ],
           }).sort({ updatedAt: 1 });
 
-          socket.emit('message', getPreMessage || []);
+          socket.emit('message-seen', getPreMessage || []);
         } catch (error: any) {
           callbackFn(callback, {
             success: false,
@@ -248,6 +229,7 @@ const initializeSocketIO = (server: HttpServer) => {
         }
       });
 
+      //---------------------- Send Message -----------------------//
       socket.on('send-message', async (payload, callback) => {
         try {
           payload.sender = user?._id;
@@ -289,11 +271,26 @@ const initializeSocketIO = (server: HttpServer) => {
           );
 
           io.to(receiverSocket).emit('chat-list', ChatListReceiver);
+          console.log(receiverSocket);
 
           const ChatListSender = await ChatServices.getMyChatList(
             result?.sender.toString(),
           );
           io.to(userSocket).emit('chat-list', ChatListSender);
+
+          const getPreMessage = await Message.find({
+            $or: [
+              { sender: user?._id, receiver: payload.receiver },
+              { sender: payload.receiver, receiver: user?._id },
+            ],
+          }).sort({ updatedAt: 1 });
+
+          console.log('Recever ID', payload.receiver);
+          io.to(receiverSocket).emit(
+            `message-${payload.receiver}`,
+            getPreMessage || [],
+          );
+          console.log('Socket Id', receiverSocket);
 
           //  🔔 Send Firebase Notification
           // const receiverUser = await User.findById(result.receiver);
