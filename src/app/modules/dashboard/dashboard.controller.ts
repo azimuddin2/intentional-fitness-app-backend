@@ -25,7 +25,37 @@ const getTotalTrainers = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getUserOverviewChart = catchAsync(async (req: Request, res: Response) => {
+  const year = req.query.year ? Number(req.query.year) : undefined;
+
+  const result = await DashboardServices.getUserOverviewChart(year);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'User yearly overview chart retrieved successfully',
+    data: result,
+  });
+});
+
+const getTrainerOverviewChart = catchAsync(
+  async (req: Request, res: Response) => {
+    const year = req.query.year ? Number(req.query.year) : undefined;
+
+    const result = await DashboardServices.getTrainerOverviewChart(year);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Trainer yearly overview chart retrieved successfully',
+      data: result,
+    });
+  },
+);
+
 export const DashboardControllers = {
   getTotalUsers,
   getTotalTrainers,
+  getUserOverviewChart,
+  getTrainerOverviewChart,
 };
