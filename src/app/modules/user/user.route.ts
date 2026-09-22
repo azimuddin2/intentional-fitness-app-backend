@@ -61,13 +61,19 @@ router.put(
   UserControllers.changeStatus,
 );
 
-router.delete('/', auth('trainer', 'user'), UserControllers.deleteUserAccount);
-
 router.patch(
   '/update-notifications',
   auth('user', 'trainer', 'admin'),
   validateRequest(UserValidations.notificationSettingsValidationSchema),
   UserControllers.updateNotificationSettings,
+);
+
+router.delete('/', auth('trainer', 'user'), UserControllers.deleteUserAccount);
+
+router.patch(
+  '/reactivate/:id',
+  auth('admin'),
+  UserControllers.reactivateUserAccount,
 );
 
 export const UserRoutes = router;

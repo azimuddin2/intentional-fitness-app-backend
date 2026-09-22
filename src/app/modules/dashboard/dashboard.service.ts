@@ -111,9 +111,18 @@ const getTrainerOverviewChart = async (year?: number) => {
   };
 };
 
+const getRecentUsersFromDB = async () => {
+  const result = await User.find({ role: { $nin: ['admin'] } })
+    .sort({ createdAt: -1 })
+    .limit(5);
+
+  return result;
+};
+
 export const DashboardServices = {
   getTotalUsersFromDB,
   getTotalTrainersFromDB,
   getUserOverviewChart,
   getTrainerOverviewChart,
+  getRecentUsersFromDB,
 };

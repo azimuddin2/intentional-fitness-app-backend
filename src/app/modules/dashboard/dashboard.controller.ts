@@ -53,9 +53,21 @@ const getTrainerOverviewChart = catchAsync(
   },
 );
 
+const getRecentUsers = catchAsync(async (req: Request, res: Response) => {
+  const result = await DashboardServices.getRecentUsersFromDB();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Recent users retrieved successfully',
+    data: result,
+  });
+});
+
 export const DashboardControllers = {
   getTotalUsers,
   getTotalTrainers,
   getUserOverviewChart,
   getTrainerOverviewChart,
+  getRecentUsers,
 };

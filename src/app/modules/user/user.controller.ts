@@ -127,19 +127,6 @@ const changeStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deleteUserAccount = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user.userId;
-
-  const result = await UserServices.deleteUserAccountFromDB(userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: 201,
-    message: 'Your account has been deleted successfully.',
-    data: result,
-  });
-});
-
 const updateNotificationSettings = catchAsync(
   async (req: Request, res: Response) => {
     const { email } = req.user;
@@ -159,6 +146,32 @@ const updateNotificationSettings = catchAsync(
   },
 );
 
+const deleteUserAccount = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user.userId;
+
+  const result = await UserServices.deleteUserAccountFromDB(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 201,
+    message: 'Your account has been deleted successfully.',
+    data: result,
+  });
+});
+
+const reactivateUserAccount = catchAsync(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await UserServices.reactivateUserAccountFromDB(id);
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: 'Account has been reactivated successfully.',
+      data: result,
+    });
+  },
+);
+
 export const UserControllers = {
   signupUser,
   createUserByTrainer,
@@ -169,6 +182,7 @@ export const UserControllers = {
   updateUserProfile,
   updateUserPicture,
   changeStatus,
-  deleteUserAccount,
   updateNotificationSettings,
+  deleteUserAccount,
+  reactivateUserAccount,
 };

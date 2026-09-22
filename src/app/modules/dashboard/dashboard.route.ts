@@ -20,4 +20,6 @@ router.get(
   DashboardControllers.getTrainerOverviewChart,
 );
 
+router.get('/recent-users', auth('admin'), DashboardControllers.getRecentUsers);
+
 export const DashboardRoutes = router;
