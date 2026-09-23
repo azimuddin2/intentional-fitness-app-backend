@@ -21,6 +21,8 @@ import { StabilizeScheduleRoutes } from '../modules/stabilizeSchedule/stabilizeS
 import { ProgramScheduleRoutes } from '../modules/programSchedule/programSchedule.route';
 import { MessageImageRoutes } from '../modules/messageImage/messageImage.route';
 import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
+import { SurveyRoutes } from '../modules/survey/survey.route';
+import { SurveyQuestionRoutes } from '../modules/surveyQuestion/surveyQuestion.route';
 
 const router = Router();
 
@@ -112,6 +114,14 @@ const moduleRoutes = [
   {
     path: '/dashboard',
     route: DashboardRoutes,
+  },
+  {
+    path: '/surveys',
+    route: SurveyRoutes,
+  },
+  {
+    path: '/survey-questions',
+    route: SurveyQuestionRoutes,
   },
 ];
 

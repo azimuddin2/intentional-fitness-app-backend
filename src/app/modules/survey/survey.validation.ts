@@ -6,7 +6,7 @@ const createSurveyValidationSchema = z.object({
     title: z
       .string({ required_error: 'Survey title is required' })
       .min(1, 'Survey title cannot be empty'),
-    description: z.string().optional(),
+    description: z.string({ required_error: 'Survey description is requred' }),
     status: z
       .enum([...SurveyStatus] as [string, ...string[]])
       .optional()
