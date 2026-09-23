@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SurveyStatus } from './survey.constant';
 
 const createSurveyValidationSchema = z.object({
   body: z.object({
@@ -7,12 +8,9 @@ const createSurveyValidationSchema = z.object({
       .min(1, 'Survey title cannot be empty'),
     description: z.string().optional(),
     status: z
-      .enum(['active', 'draft', 'archived'])
+      .enum([...SurveyStatus] as [string, ...string[]])
       .optional()
       .default('active'),
-    orderIndex: z.number().optional().default(0),
-
-    isDeleted: z.boolean().optional().default(false),
   }),
 });
 
@@ -20,8 +18,7 @@ const updateSurveyValidationSchema = z.object({
   body: z.object({
     title: z.string().min(1, 'Survey title cannot be empty').optional(),
     description: z.string().optional(),
-    status: z.enum(['active', 'draft', 'archived']).optional(),
-    orderIndex: z.number().optional(),
+    status: z.enum([...SurveyStatus] as [string, ...string[]]).optional(),
   }),
 });
 

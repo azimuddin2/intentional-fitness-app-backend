@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { TSurvey } from './survey.interface';
+import { SurveyStatus } from './survey.constant';
 
 const SurveySchema = new Schema<TSurvey>(
   {
@@ -14,7 +15,10 @@ const SurveySchema = new Schema<TSurvey>(
     },
     status: {
       type: String,
-      enum: ['active', 'draft', 'archived'],
+      enum: {
+        values: SurveyStatus,
+        message: '{VALUE} is not valid',
+      },
       default: 'active',
     },
     orderIndex: {

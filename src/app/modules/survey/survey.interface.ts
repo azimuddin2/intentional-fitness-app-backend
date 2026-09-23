@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongoose';
 import { TUser } from '../user/user.interface';
 
-export type TSurveyStatus = 'active' | 'draft' | 'archived';
+export type TSurveyStatus = 'active' | 'inactive';
 
 export type TSurvey = {
   _id?: string;
