@@ -1,4 +1,5 @@
 import AppError from '../../errors/AppError';
+import { Survey } from '../survey/survey.modal';
 import { TSurveyQuestion } from './surveyQuestion.interface';
 import { SurveyQuestion } from './surveyQuestion.model';
 
@@ -26,7 +27,9 @@ const getQuestionsBySurveyFromDB = async (surveyId: string) => {
     orderIndex: 1,
   });
 
-  return result;
+  const survey = await Survey.findById(surveyId);
+
+  return { survey, result };
 };
 
 const getQuestionByIdFromDB = async (id: string) => {

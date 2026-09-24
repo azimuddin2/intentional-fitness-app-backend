@@ -23,6 +23,7 @@ import { MessageImageRoutes } from '../modules/messageImage/messageImage.route';
 import { DashboardRoutes } from '../modules/dashboard/dashboard.route';
 import { SurveyRoutes } from '../modules/survey/survey.route';
 import { SurveyQuestionRoutes } from '../modules/surveyQuestion/surveyQuestion.route';
+import { SurveyResponseRoutes } from '../modules/surveyResponse/surveyResponse.route';
 
 const router = Router();
 
@@ -122,6 +123,10 @@ const moduleRoutes = [
   {
     path: '/survey-questions',
     route: SurveyQuestionRoutes,
+  },
+  {
+    path: '/survey-response',
+    route: SurveyResponseRoutes,
   },
 ];
 
